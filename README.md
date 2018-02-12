@@ -20,4 +20,4 @@ Collector Checkout Extension for OpenCart, allowing you to take payments via Col
 5. Go to Extensions->Extensions. Select "Payments" extension type. Find "Collector Checkout" and click Install button.
 6. Click Edit button after install to enable and configure Collector Checkout.
 
-[package]: https://github.com/
+[package]: https://github.com/AAITSE/collector-checkout-opencart/raw/master/ocmod/collector.ocmod.zip
