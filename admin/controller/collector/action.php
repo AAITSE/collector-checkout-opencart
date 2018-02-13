@@ -53,6 +53,11 @@ class ControllerCollectorAction extends Controller {
                     break;
                 case 'extend':
                     $result = $this->model_collector_api->extend($payment['order_id'], $payment['store_id'], $payment['country_code'], $payment['purchaseIdentifier']);
+	                if ($result) {
+		                $this->model_collector_payments->update($payment['id'], [
+			                'extended' => 1
+		                ]);
+	                }
                     break;
             }
         } catch (Exception $e) {

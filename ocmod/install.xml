@@ -223,11 +223,11 @@
                           <?php if ($collector['activated'] && !$collector['credited']): ?>
                           <button data-id="<?php echo $collector['id']; ?>" data-action="credit" class="collector-action btn">Credit</button>
                           <?php endif; ?>
-                          <?php if (in_array($collector['paymentName'], ['Invoice', 'DirectInvoice'])):?>
+                          <?php if (in_array($collector['paymentName'], ['Invoice', 'DirectInvoice']) && !$collector['canceled'] && !$collector['credited']):?>
                             <?php if ($collector['activated']): ?>
                                 <button data-id="<?php echo $collector['id']; ?>" data-action="send" class="collector-action btn">Send Invoice</button>
                             <?php endif; ?>
-                            <?php if ($collector['activated']): ?>
+                            <?php if ($collector['activated'] && !$collector['extended']): ?>
                                 <button data-id="<?php echo $collector['id']; ?>" data-action="extend" class="collector-action btn">Extend Due Date</button>
                             <?php endif; ?>
                           <?php endif; ?>

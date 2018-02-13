@@ -18,6 +18,7 @@ class ModelExtensionPaymentCollector extends Model {
   `activated` tinyint(4) NOT NULL DEFAULT '0',
   `canceled` tinyint(4) NOT NULL DEFAULT '0',
   `credited` tinyint(4) NOT NULL DEFAULT '0',
+  `extended` tinyint(4) NOT NULL DEFAULT '0',
   `status` varchar(50) DEFAULT NULL,
   `paymentName` varchar(255) DEFAULT NULL,
   `info` text,

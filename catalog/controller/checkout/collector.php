@@ -645,6 +645,15 @@ class ControllerCheckoutCollector extends Controller
                 'purchaseStatus' => $purchaseStatus
             ]);
 
+	        // B2B: Add delivery Contact Information
+	        if (isset($info['data']['businessCustomer']) && isset($info['data']['businessCustomer']['deliveryContactInformation'])) {
+		        $order_status_id = $this->config->get('config_order_status_id');
+		        $email = $info['data']['businessCustomer']['deliveryContactInformation']['email'];
+		        $phone = $info['data']['businessCustomer']['deliveryContactInformation']['mobilePhoneNumber'];
+		        $message = sprintf('Delivery Contact Information. Email: %s Phone: %s', $email, $phone);
+		        $this->model_checkout_order->addOrderHistory($order_id, $order_status_id, $message, false);
+	        }
+
             switch ($purchaseStatus) {
                 case 'Preliminary':
                     // The invoice is pending and waiting for activation by Merchant.
@@ -829,6 +838,10 @@ class ControllerCheckoutCollector extends Controller
      */
     public function set_customer_type()
     {
+    	// Unset quote
+	    unset($this->session->data['collector_quote_id']);
+	    unset($this->session->data['collector_private_id']);
+
         $customer_type = isset($this->request->post['customer_type']) ? $this->request->post['customer_type'] : 'private';
         $this->session->data['collector_customer_type'] = $customer_type;
         $this->response->addHeader('Content-Type: application/json');

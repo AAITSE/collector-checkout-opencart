@@ -67,34 +67,44 @@ class ModelCollectorApi extends Model {
         // Hash
         $hash = $user_name . ':' . hash('sha256', $request_body . $path . $shared_key);
 
+        $url = $backend_api_url . $path;
+
+        // Logger
+	    $log = new Log('collector_api.log');
+
         // Request
-        //try {
+        try {
             $client = new GuzzleHttp\Client();
             $headers = array(
                 'Accept' => 'application/json',
                 'Authorization' => 'SharedKey ' . base64_encode($hash)
             );
 
-            $response = $client->request($method, $backend_api_url . $path, count($params) > 0 ? [
+            $response = $client->request($method, $url, count($params) > 0 ? [
                 'headers' => $headers,
                 'body' => $request_body,
                 //'debug' => true
             ] : ['headers' => $headers]);
-        /* } catch (GuzzleHttp\Exception\ClientException $e) {
+
+	        $log->write(sprintf('%s %s %s', $method, $url, 'Data: ' . var_export($params, true)));
+        } catch (GuzzleHttp\Exception\ClientException $e) {
             $response = $e->getResponse();
             $responseBodyAsString = $response->getBody()->getContents();
-
+	        $log->write(sprintf('ClientException: %s. URL: %s, Params: %s', $responseBodyAsString, $url, var_export($params, true)));
             throw new Exception('Error: ' . $responseBodyAsString);
         } catch (GuzzleHttp\Exception\ServerException $e) {
             $response = $e->getResponse();
             $responseBodyAsString = $response->getBody()->getContents();
-
+	        $log->write(sprintf('ServerException: %s. URL: %s, Params: %s', $responseBodyAsString, $url, var_export($params, true)));
             throw new Exception('Error: ' . $responseBodyAsString);
+        } catch (Exception $e) {
+	        $log->write(sprintf('ServerException: %s. URL: %s, Params: %s', $e->getMessage(), $url, var_export($params, true)));
+	        throw $e;
         }
 
         if (floor($response->getStatusCode() / 100) != 2) {
             throw new Exception('Request with with code: ' . $response->getStatusCode());
-        } */
+        }
 
         return json_decode($response->getBody()->getContents(), true);
     }
