@@ -1,6 +1,6 @@
 # Collector Checkout for OpenCart
 
-Collector Checkout Extension for OpenCart, allowing you to take payments via Collector Banks payment method Collector Checkout.
+Collector Checkout Extension for OpenCart, allowing you to take payments via Collector Banks payment method Collector Checkout. A contract with Collector Bank is required to use this payment solution.
 
 ## Installation
 
