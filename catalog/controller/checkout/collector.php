@@ -838,11 +838,37 @@ class ControllerCheckoutCollector extends Controller
      */
     public function set_customer_type()
     {
-    	// Unset quote
+	    $customer_type = isset($this->request->post['customer_type']) ? $this->request->post['customer_type'] : 'private';
+
+	    // Get current Country
+	    $this->load->model('localisation/country');
+	    $country_id = isset($this->session->data['payment_address']) ?
+		    $this->session->data['payment_address']['country_id'] : $this->config->get('config_country_id');
+
+	    // Load Country info
+	    $country = $this->model_localisation_country->getCountry($country_id);
+
+	    // Verify that selected country_id is possible for use
+	    if (!in_array($country['iso_code_2'], ['SE', 'NO'])) {
+		    // Get Sweden as default
+		    $country = array_filter($this->getHelper()->getCountries(), function($value, $key) {
+			    return in_array($value['iso_code_2'], ['SE']);
+		    }, ARRAY_FILTER_USE_BOTH);
+		    $country = array_shift($country);
+	    }
+
+	    // Check Store ID is defined
+	    $store_id = $this->getMerchantStoreId($customer_type, strtolower($country['iso_code_2']));
+	    if (empty($store_id)) {
+		    $this->response->addHeader('Content-Type: application/json');
+		    $this->response->setOutput(json_encode(['success' => false, 'message' => $this->getView()->__('Unable to switch customer type')]));
+		    return;
+	    }
+
+	    // Unset quote
 	    unset($this->session->data['collector_quote_id']);
 	    unset($this->session->data['collector_private_id']);
 
-        $customer_type = isset($this->request->post['customer_type']) ? $this->request->post['customer_type'] : 'private';
         $this->session->data['collector_customer_type'] = $customer_type;
         $this->response->addHeader('Content-Type: application/json');
         $this->response->setOutput(json_encode(['success' => true]));
