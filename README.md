@@ -22,7 +22,7 @@ This is the official Collector Checkout Extension for OpenCart, allowing you to 
 
 [package]: https://github.com/AAITSE/collector-checkout-opencart/raw/master/ocmod/collector.ocmod.zip
 
-## Manual
+## Instructions for configuration
 
 ### Configuration
 Navigate to Extensions -> Payments -> Collector Bank -> Edit Mode
