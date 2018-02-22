@@ -657,7 +657,7 @@ class ControllerCheckoutCollector extends Controller
             switch ($purchaseStatus) {
                 case 'Preliminary':
                     // The invoice is pending and waiting for activation by Merchant.
-                    $order_status_id = $settings['collector_order_status_pending_id'];
+                    $order_status_id = $settings['collector_order_status_preliminary_id'];
                     if (empty($order_status_id)) {
                         $order_status_id = $this->config->get('config_order_status_id');
                     }
@@ -666,7 +666,7 @@ class ControllerCheckoutCollector extends Controller
                     break;
                 case 'OnHold':
                     // The invoice is waiting for the anti-fraud callback.
-                    $order_status_id = $settings['collector_order_status_rejected_id'];
+                    $order_status_id = $settings['collector_order_status_pending_id'];
                     if (empty($order_status_id)) {
                         $order_status_id = $this->config->get('config_order_status_id');
                     }
@@ -684,12 +684,12 @@ class ControllerCheckoutCollector extends Controller
                     break;
                 default:
                     // Add Order History
-                    $order_status_id = $settings['collector_order_status_id'];
+                    $order_status_id = $settings['collector_order_status_rejected_id'];
                     if (empty($order_status_id)) {
                         $order_status_id = $this->config->get('config_order_status_id');
                     }
 
-                    $this->model_checkout_order->addOrderHistory($order_id, $order_status_id, 'Order has been paid', true);
+                    $this->model_checkout_order->addOrderHistory($order_id, $order_status_id, 'Purchase status: ' . $purchaseStatus, true);
                     break;
             }
         } catch (Exception $e) {
@@ -748,7 +748,7 @@ class ControllerCheckoutCollector extends Controller
             $order_id = $payment['order_id'];
             $new_status_str = '';
             if ($InvoiceStatus == 1) {
-                $order_status_id = $settings['collector_order_status_accepted_id'];
+                $order_status_id = $settings['collector_order_status_preliminary_id'];
                 $new_status_str = 'Preliminary';
 
 	            $this->getPayments()->update($payment['id'], [
