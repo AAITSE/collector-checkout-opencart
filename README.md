@@ -16,7 +16,7 @@ This is the official Collector Checkout Extension for OpenCart, allowing you to 
 1. Clone repository or download as ZIP archive and unzip files
 2. Upload files to root of your OpenCart site using FTP/SFTP, the root is usually the public_html folder.
 3. Login to OpenCart admin panel
-4. Install modification XML. Go to Extensions->Extensions Installer. Upload install.xml from ocmod directory and click Continue to install.
+4. Install modification XML. Go to Extensions->Extensions Installer. Rename install.xml from ocmod directory to collector.ocmod.xml and upload. Click Continue to install.
 5. Go to Extensions->Extensions. Select "Payments" extension type. Find "Collector Checkout" and click Install button.
 6. Click Edit button after install to enable and configure Collector Checkout.
 
