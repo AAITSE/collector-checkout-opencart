@@ -49,6 +49,9 @@ class ControllerCollectorAction extends Controller {
                         $this->model_collector_payments->update($payment['id'], [
                             'credited' => 1
                         ]);
+
+	                    $order_status_id = $settings['collector_order_status_credited_id'];
+	                    $this->_update_status($payment['order_id'], $order_status_id, 'Order has been credited');
                     }
                     break;
                 case 'extend':

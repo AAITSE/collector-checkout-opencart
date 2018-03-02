@@ -208,6 +208,27 @@
                             </div>
                         </div>
 
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="collector_order_status_credited_id">
+			                    <?php echo $entry_order_status_credited; ?>
+                            </label>
+                            <div class="col-sm-10">
+                                <select name="collector_order_status_credited_id" id="collector_order_status_credited_id" class="form-control">
+				                    <?php foreach ($order_statuses as $order_status): ?>
+					                    <?php if ($order_status['order_status_id'] == $collector_order_status_credited_id): ?>
+                                            <option value="<?php echo $order_status['order_status_id']; ?>"
+                                                    selected="selected"><?php echo $order_status['name']; ?>
+                                            </option>
+					                    <?php else: ?>
+                                            <option value="<?php echo $order_status['order_status_id']; ?>">
+							                    <?php echo $order_status['name']; ?>
+                                            </option>
+					                    <?php endif; ?>
+				                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="form-group required">
                             <label class="col-sm-2 control-label" for="collector_merchant_terms_url">
                                 <?php echo $entry_merchant_terms_url; ?>

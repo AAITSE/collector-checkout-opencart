@@ -22,6 +22,7 @@ $_['entry_order_status_preliminary'] = 'Order Status for preliminary orders';
 $_['entry_order_status_accepted']	= 'Order Status for accepted payments';
 $_['entry_order_status_pending']	= 'Order Status for pending payments';
 $_['entry_order_status_rejected']	= 'Order Status for rejected payments';
+$_['entry_order_status_credited']	= 'Order Status for credited payments';
 
 $_['entry_merchant_terms_url'] = 'Merchant Terms Url';
 $_['entry_url_token'] = 'Token for Invoice Status URL';

@@ -21,6 +21,7 @@ class ModelCollectorApi extends Model {
             'collector_order_status_preliminary_id' => 0,
             'collector_order_status_pending_id' => 0,
             'collector_order_status_rejected_id' => 0,
+	        'collector_order_status_credited_id' => 0,
             'collector_merchant_terms_url' => '',
             'collector_url_token' => '',
             'collector_invoice_fee_b2c' => 0,
