@@ -270,4 +270,59 @@
             ]]></add>
         </operation>
     </file>
+
+    <file path="admin/view/template/sale/order_info.tpl">
+        <operation>
+            <search trim="true"><![CDATA[
+            <td class="text-left"><?php echo $shipping_address; ?></td>
+            ]]></search>
+            <add position="after" offset="4"><![CDATA[
+          <?php if (isset($collector) && isset($collector['items'])): ?>
+              <table class="table table-bordered">
+                  <thead>
+                  <tr>
+                      <td class="text-left">Product</td>
+                      <td class="text-right">Quantity</td>
+                      <td class="text-right">Unit Price</td>
+                      <td class="text-right">Total</td>
+                      <td class="text-right">VAT Rate</td>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <?php foreach ($collector['items'] as $item): ?>
+                  <tr>
+                      <td class="text-left">
+                          <?php echo $item['name']; ?>
+                      </td>
+                      <td class="text-right">
+                          <?php echo $item['qty']; ?>
+                      </td>
+                      <td class="text-right">
+                          <?php echo $item['unit_price']; ?>
+                      </td>
+                      <td class="text-right">
+                          <?php echo $item['unit_price'] * $item['qty']; ?>
+                      </td>
+                      <td class="text-right">
+                          <?php echo $item['vat']; ?>
+                      </td>
+                  </tr>
+                  <?php endforeach; ?>
+                  </tbody>
+              </table>
+          <?php else: ?>
+            ]]></add>
+        </operation>
+    </file>
+
+    <file path="admin/view/template/sale/order_info.tpl">
+        <operation>
+            <search trim="true"><![CDATA[
+            <?php if ($comment) { ?>
+            ]]></search>
+            <add position="before"><![CDATA[
+          <?php endif; ?>
+            ]]></add>
+        </operation>
+    </file>
 </modification>
