@@ -187,7 +187,7 @@
                   </tr>
                   <tr>
                       <td style="width: 10%;">
-                          <strong>Status</strong>
+                          <strong>Collector Order Status</strong>
                       </td>
                       <td>
                           <?php echo $collector['status']; ?>
