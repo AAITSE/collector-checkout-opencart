@@ -738,7 +738,7 @@ class ControllerCheckoutCollector extends Controller
             // Wait for order place
             $time = 0;
             do {
-                $payment = $this->getPayments()->getByOrderId($OrderNo);
+                $payment = $this->getPayments()->getByPurchaseId($InvoiceNo);
                 $time++;
                 sleep(1);
                 if ($time > 30) {
@@ -747,7 +747,7 @@ class ControllerCheckoutCollector extends Controller
             } while (!$payment || empty($payment['order_id']));
 
             if (!$payment) {
-                throw new Exception('Failed to get payment data');
+                throw new Exception('Failed to get purchase');
             }
 
             if (!in_array($InvoiceStatus, [0, 1, 5])) {

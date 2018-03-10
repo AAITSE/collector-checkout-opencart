@@ -122,6 +122,24 @@ class ModelCollectorPayments extends Model {
         return array_shift($cart->rows);
     }
 
+	/**
+	 * Get By Order Id
+	 * @param $purchase_id
+	 *
+	 * @return bool|mixed
+	 */
+	public function getByPurchaseId($purchase_id)
+	{
+		$query = sprintf('SELECT * FROM `' . DB_PREFIX . 'collector_payments` WHERE purchaseIdentifier=%s;',
+			$this->db->escape($purchase_id)
+		);
+		$result = $this->db->query($query);
+		if ($result->num_rows === 0) {
+			return false;
+		}
+		return array_shift($result->rows);
+	}
+
     /**
      * Update
      * @param $id
