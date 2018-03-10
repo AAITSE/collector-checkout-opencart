@@ -198,79 +198,89 @@ class ControllerCheckoutCollector extends Controller
         $quote = $this->_makeQuote();
 
 	    $private_id = isset($this->session->data['collector_private_id']) ? $this->session->data['collector_private_id'] : null;
-	    if (!$private_id) {
-	    	// Init Checkout
-		    $params = [
-			    'storeId' => $data['store_id'],
-			    'countryCode' => $country['iso_code_2'],
-			    'redirectPageUri' => $this->getView()->url('checkout/collector/success'),
-			    'merchantTermsUri' => $settings['collector_merchant_terms_url'],
-			    'notificationUri' => $this->getView()->url('checkout/collector/ipn', ['token' => $quote['token']]),
-			    'cart' => [
-				    'items' => $collector_items['items']
-			    ]
-		    ];
-		    if (count($collector_items['fees']) > 0) {
-			    $params['fees'] = $collector_items['fees'];
-		    }
 
-		    try {
-			    $result = $this->getApi()->request('POST', '/checkout', $params);
-		    } catch (Exception $e) {
-			    $message = $e->getMessage();
-			    echo 'Error: ' . $message;
-			    exit();
-		    }
+	    try {
+		    if (!$private_id) {
+			    // Init Checkout
+			    $params = [
+				    'storeId' => $data['store_id'],
+				    'countryCode' => $country['iso_code_2'],
+				    'redirectPageUri' => $this->getView()->url('checkout/collector/success'),
+				    'merchantTermsUri' => $settings['collector_merchant_terms_url'],
+				    'notificationUri' => $this->getView()->url('checkout/collector/ipn', ['token' => $quote['token']]),
+				    'cart' => [
+					    'items' => $collector_items['items']
+				    ]
+			    ];
+			    if (count($collector_items['fees']) > 0) {
+				    $params['fees'] = $collector_items['fees'];
+			    }
 
-		    // Store privateId in session
-		    $this->session->data['collector_private_id'] = $result['data']['privateId'];
+			    try {
+				    $result = $this->getApi()->request('POST', '/checkout', $params);
+			    } catch (Exception $e) {
+				    $message = $e->getMessage();
+				    echo 'Error: ' . $message;
+				    exit();
+			    }
 
-		    // Save in db
-		    $this->getPayments()->add([
-			    'quote_id' => $quote['quote_id'],
-			    'private_id' => $result['data']['privateId'],
-			    'public_token' => $result['data']['publicToken'],
-			    'cart_items' => json_encode($cart_items),
-			    'expiresAt' => $result['data']['expiresAt'],
-			    'country_code' => $country['iso_code_2'],
-			    'store_id' => $data['store_id']
-		    ]);
+			    // Store privateId in session
+			    $this->session->data['collector_private_id'] = $result['data']['privateId'];
 
-		    $public_token = $result['data']['publicToken'];
-	    } else {
-	    	// Update Checkout
+			    // Save in db
+			    $this->getPayments()->add([
+				    'quote_id' => $quote['quote_id'],
+				    'private_id' => $result['data']['privateId'],
+				    'public_token' => $result['data']['publicToken'],
+				    'cart_items' => json_encode($cart_items),
+				    'expiresAt' => $result['data']['expiresAt'],
+				    'country_code' => $country['iso_code_2'],
+				    'store_id' => $data['store_id']
+			    ]);
 
-		    // Update Collector
-		    // Update items
-		    $params = [
-			    'items' => $collector_items['items'],
-		    ];
-		    $result = $this->getApi()->request('PUT', sprintf('/merchants/%s/checkouts/%s/cart', $data['store_id'], $private_id), $params);
+			    $public_token = $result['data']['publicToken'];
+		    } else {
+			    // Update Checkout
+			    // Update items
+			    $params = [
+				    'items' => $collector_items['items'],
+			    ];
+			    $result = $this->getApi()->request('PUT', sprintf('/merchants/%s/checkouts/%s/cart', $data['store_id'], $private_id), $params);
 
-		    // Update fees
-		    $params = $collector_items['fees'];
-		    if ($this->cart->hasShipping()) {
-			    $shipping = $this->getHelper()->getCartShipping();
-			    if ($shipping['unit_price'] < 0.1) {
+			    // Update fees
+			    $params = $collector_items['fees'];
+			    if ($this->cart->hasShipping()) {
+				    $shipping = $this->getHelper()->getCartShipping();
+				    if ($shipping['unit_price'] < 0.1) {
+					    $params['shipping'] = null;
+				    }
+			    } else {
 				    $params['shipping'] = null;
 			    }
-		    } else {
-			    $params['shipping'] = null;
+
+			    $result = $this->getApi()->request('PUT', sprintf('/merchants/%s/checkouts/%s/fees', $data['store_id'], $private_id), $params);
+
+			    // Update Quote
+			    $this->_makeQuote();
+
+			    // Update cart items
+			    $quote_id = isset($this->session->data['collector_quote_id']) ? $this->session->data['collector_quote_id'] : null;
+			    $payment = $this->getPayments()->getByQuoteId($quote_id);
+			    $this->getPayments()->update($payment['id'], [
+				    'cart_items' => json_encode($cart_items),
+			    ]);
+
+			    $public_token = $payment['public_token'];
+		    }
+	    } catch (Exception $e) {
+		    if (strpos($e->getMessage(), 'StoreId_Mismatch') !== false) {
+			    unset($this->session->data['collector_quote_id']);
+			    unset($this->session->data['collector_private_id']);
 		    }
 
-		    $result = $this->getApi()->request('PUT', sprintf('/merchants/%s/checkouts/%s/fees', $data['store_id'], $private_id), $params);
-
-		    // Update Quote
-		    $this->_makeQuote();
-
-		    // Update cart items
-		    $quote_id = isset($this->session->data['collector_quote_id']) ? $this->session->data['collector_quote_id'] : null;
-		    $payment = $this->getPayments()->getByQuoteId($quote_id);
-		    $this->getPayments()->update($payment['id'], [
-			    'cart_items' => json_encode($cart_items),
-		    ]);
-
-		    $public_token = $payment['public_token'];
+		    // @todo Improve error output
+		    echo 'Error: ' . $e->getMessage();
+		    exit();
 	    }
 
         $data['collector'] = [
@@ -873,6 +883,41 @@ class ControllerCheckoutCollector extends Controller
         $this->response->addHeader('Content-Type: application/json');
         $this->response->setOutput(json_encode(['success' => true]));
     }
+
+	/**
+	 * Set Country
+	 */
+	public function set_country()
+	{
+		$country_id = isset($this->request->post['country_id']) ? $this->request->post['country_id'] : null;
+		if (empty($country_id)) {
+			$country_id = $this->config->get('config_country_id');
+		}
+
+		// Load Country info
+		$this->load->model('localisation/country');
+		$country = $this->model_localisation_country->getCountry($country_id);
+
+		// Verify that selected country_id is possible for use
+		if (!in_array($country['iso_code_2'], ['SE', 'NO'])) {
+			// Get Sweden as default
+			$country = array_filter($this->getHelper()->getCountries(), function($value, $key) {
+				return in_array($value['iso_code_2'], ['SE']);
+			}, ARRAY_FILTER_USE_BOTH);
+			$country = array_shift($country);
+		}
+
+		// Set Country Id
+		$this->session->data['payment_address']['country_id'] = $country_id;
+		$this->session->data['shipping_address']['country_id'] = $country_id;
+
+		// Unset quote
+		unset($this->session->data['collector_quote_id']);
+		unset($this->session->data['collector_private_id']);
+
+		$this->response->addHeader('Content-Type: application/json');
+		$this->response->setOutput(json_encode(['success' => true]));
+	}
 
     /**
      * Shipping Methods Action

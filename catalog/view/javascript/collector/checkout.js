@@ -100,13 +100,25 @@ $(document).on('click', '.collector-cart .remove', function(e) {
 // Country select
 $(document).on( 'change', '#input-payment-country', function(e) {
     var el = $(e.currentTarget);
-    //var country_id = el.val();
+    var country_id = el.val();
 
     el.prop('disabled', true);
-    update_checkout(function (err) {
+    $.ajax({
+        url: 'index.php?route=checkout/collector/set_country',
+        method: 'post',
+        dataType: 'json',
+        data: {
+            country_id: country_id
+        }
+    }).done(function (response) {
         el.prop('disabled', false);
-        //update_collector_checkout();
-        self.location.href = location.href;
+
+        // Reload page
+        if (response.success) {
+            self.location.href = location.href;
+        } else {
+            alert(response.message)
+        }
     });
 });
 
