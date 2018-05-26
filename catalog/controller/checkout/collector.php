@@ -158,9 +158,16 @@ class ControllerCheckoutCollector extends Controller
         $data['is_logged'] = $this->customer->isLogged();
         $data['shipping_required'] = $this->cart->hasShipping();
 
+	    $data['customer_type'] = $this->getCustomerType();
         $data['countries'] = array_filter($this->getHelper()->getCountries(), function($value, $key) {
             return in_array($value['iso_code_2'], ['SE', 'NO']);
         }, ARRAY_FILTER_USE_BOTH);
+
+        // Remove useless countries
+	    $data['countries'] = array_filter($data['countries'], function($value, $key) use ($data) {
+		    $store_id = $this->getMerchantStoreId($data['customer_type'], $value['iso_code_2']);
+		    return ! empty($store_id);
+	    }, ARRAY_FILTER_USE_BOTH);
 
 	    $data['collector_country'] = $settings['collector_country'];
         switch ($data['collector_country']) {
@@ -190,12 +197,11 @@ class ControllerCheckoutCollector extends Controller
 
 		        // Verify that selected country_id is possible for use
 		        if (!in_array($country['iso_code_2'], ['SE', 'NO'])) {
-			        // Set Sweden as default
-			        $country = array_filter($this->getHelper()->getCountries(), function($value, $key) {
-				        return in_array($value['iso_code_2'], ['SE']);
-			        }, ARRAY_FILTER_USE_BOTH);
-			        $country = array_shift($country);
+		        	$countries = $data['countries'];
+		        	$country = array_shift($countries);
+			        $data['country_id'] = $country['country_id'];
 		        }
+		        break;
         }
 
 	    // Force country selection
@@ -203,7 +209,6 @@ class ControllerCheckoutCollector extends Controller
 	    $this->session->data['shipping_address']['country_id'] = $country['country_id'];
 
         $data['store_mode'] = $settings['collector_store_mode'];
-        $data['customer_type'] = $this->getCustomerType();
         $data['store_id'] = $this->getMerchantStoreId($data['customer_type'], $country['iso_code_2']);
         $data['locale'] = $country['iso_code_2'] === 'NO' ? 'nb-NO' : 'sv-SE';
 
@@ -921,11 +926,26 @@ class ControllerCheckoutCollector extends Controller
 
 		// Verify that selected country_id is possible for use
 		if (!in_array($country['iso_code_2'], ['SE', 'NO'])) {
-			// Get Sweden as default
-			$country = array_filter($this->getHelper()->getCountries(), function($value, $key) {
-				return in_array($value['iso_code_2'], ['SE']);
-			}, ARRAY_FILTER_USE_BOTH);
-			$country = array_shift($country);
+			// Get default country/store
+			foreach (array('SE', 'NO') as $country_code) {
+				$store_id = $this->getMerchantStoreId($this->getCustomerType(), $country_code);
+				if (!empty($store_id)) {
+					$country = array_filter($this->getHelper()->getCountries(), function($value, $key) use ($country_code) {
+						return in_array($value['iso_code_2'], [$country_code]);
+					}, ARRAY_FILTER_USE_BOTH);
+					$country = array_shift($country);
+					break;
+				}
+			}
+
+			if (empty($store_id)) {
+				// Error: Store ID empty
+				unset($this->session->data['payment_address']);
+				unset($this->session->data['shipping_address']);
+				$this->response->addHeader('Content-Type: application/json');
+				$this->response->setOutput(json_encode(['success' => true]));
+				return;
+			}
 		}
 
 		// Set Country Id
