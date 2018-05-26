@@ -12,6 +12,7 @@ class ModelCollectorApi extends Model {
     {
         $default = [
             'collector_status' => 0,
+	        'collector_country' => '',
 	        'collector_store_mode' => '',
             'collector_store_id' => '',
             'collector_username' => '',

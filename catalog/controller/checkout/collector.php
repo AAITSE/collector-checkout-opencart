@@ -162,24 +162,45 @@ class ControllerCheckoutCollector extends Controller
             return in_array($value['iso_code_2'], ['SE', 'NO']);
         }, ARRAY_FILTER_USE_BOTH);
 
-        $data['country_id'] = isset($this->session->data['payment_address']) ?
-            $this->session->data['payment_address']['country_id'] : $this->config->get('config_country_id');
+	    $data['collector_country'] = $settings['collector_country'];
+        switch ($data['collector_country']) {
+	        case 'SE':
+		        $country = array_filter($this->getHelper()->getCountries(), function($value, $key) {
+			        return in_array($value['iso_code_2'], ['SE']);
+		        }, ARRAY_FILTER_USE_BOTH);
+		        $country = array_shift($country);
 
-        // Load Country info
-        $country = $this->model_localisation_country->getCountry($data['country_id']);
+		        $data['country_id'] = $country['country_id'];
+		        break;
+	        case 'NO':
+		        $country = array_filter($this->getHelper()->getCountries(), function($value, $key) {
+			        return in_array($value['iso_code_2'], ['NO']);
+		        }, ARRAY_FILTER_USE_BOTH);
+		        $country = array_shift($country);
 
-        // Verify that selected country_id is possible for use
-        if (!in_array($country['iso_code_2'], ['SE', 'NO'])) {
-            // Set Sweden as default
-            $country = array_filter($this->getHelper()->getCountries(), function($value, $key) {
-                return in_array($value['iso_code_2'], ['SE']);
-            }, ARRAY_FILTER_USE_BOTH);
-            $country = array_shift($country);
+		        $data['country_id'] = $country['country_id'];
+		        break;
+	        default:
+	        	// Both
+		        $data['country_id'] = isset($this->session->data['payment_address']) ?
+			        $this->session->data['payment_address']['country_id'] : $this->config->get('config_country_id');
 
-            // Force country selection
-            $this->session->data['payment_address']['country_id'] = $country['country_id'];
-            $this->session->data['shipping_address']['country_id'] = $country['country_id'];
+		        // Load Country info
+		        $country = $this->model_localisation_country->getCountry($data['country_id']);
+
+		        // Verify that selected country_id is possible for use
+		        if (!in_array($country['iso_code_2'], ['SE', 'NO'])) {
+			        // Set Sweden as default
+			        $country = array_filter($this->getHelper()->getCountries(), function($value, $key) {
+				        return in_array($value['iso_code_2'], ['SE']);
+			        }, ARRAY_FILTER_USE_BOTH);
+			        $country = array_shift($country);
+		        }
         }
+
+	    // Force country selection
+	    $this->session->data['payment_address']['country_id'] = $country['country_id'];
+	    $this->session->data['shipping_address']['country_id'] = $country['country_id'];
 
         $data['store_mode'] = $settings['collector_store_mode'];
         $data['customer_type'] = $this->getCustomerType();

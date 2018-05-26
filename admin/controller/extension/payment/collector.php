@@ -73,6 +73,7 @@ class ControllerExtensionPaymentCollector extends Controller
         // Load settings
         $settings = [
             'collector_status',
+	        'collector_country',
 	        'collector_store_mode',
             'collector_store_id_b2c_se',
             'collector_store_id_b2b_se',

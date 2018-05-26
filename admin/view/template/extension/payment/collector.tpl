@@ -59,6 +59,19 @@
                         </div>
 
                         <div class="form-group">
+                            <label class="col-sm-2 control-label" for="collector_country">
+                                Country
+                            </label>
+                            <div class="col-sm-10">
+                                <select name="collector_country" id="collector_country" class="form-control">
+                                    <option value="" <?php echo $collector_country == '' ? 'selected' : ''; ?>>Sweden and Norway</option>
+                                    <option value="SE" <?php echo $collector_country === 'SE' ? 'selected' : ''; ?>>Sweden Only</option>
+                                    <option value="NO" <?php echo $collector_country === 'NO' ? 'selected' : ''; ?>>Norway Only</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
                             <label class="col-sm-2 control-label" for="collector_store_id_b2c_se">
                                 Merchant ID (B2C, Sweden)
                             </label>
