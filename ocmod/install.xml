@@ -1,7 +1,7 @@
 <modification>
     <name>Collector Checkout</name>
     <code>collector</code>
-    <version>1.0</version>
+    <version>1.0.1</version>
     <author>AAIT</author>
     <link>https://aait.se/</link>
     <file path="catalog/controller/checkout/checkout.php">
@@ -139,7 +139,7 @@
     <file path="admin/controller/sale/order.php">
         <operation>
             <search><![CDATA[
-            $this->response->setOutput($this->load->view('sale/order_info', $data));
+            $this->response->setOutput($this->load->view('sale/order_info
             ]]></search>
             <add position="before"><![CDATA[
             $this->load->model('collector/payments');

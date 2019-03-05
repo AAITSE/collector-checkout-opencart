@@ -29,9 +29,17 @@ class ControllerExtensionPaymentCollector extends Controller
         if (($this->request->server['REQUEST_METHOD'] === 'POST') && $this->validate()) {
             $this->model_setting_setting->editSetting('collector', $this->request->post);
             $this->session->data['success'] = $this->language->get('text_success');
-            $this->response->redirect(
-                $this->url->link('extension/extension', 'token=' . $this->session->data['token'] . '&type=payment', true)
-            );
+
+            if (version_compare(VERSION, '2.3.0.0', '=>')) {
+                $this->response->redirect(
+                    $this->url->link('extension/extension', 'token=' . $this->session->data['token'] . '&type=payment', true)
+                );
+            } else {
+                $this->response->redirect(
+                    $this->url->link('extension/payment', 'token=' . $this->session->data['token'])
+                );
+            }
+
         }
 
         /* $data['error_warning'] = '';
@@ -68,12 +76,16 @@ class ControllerExtensionPaymentCollector extends Controller
         ];
 
         $data['action'] = $this->url->link('extension/payment/collector', 'token=' . $this->session->data['token'], true);
-        $data['cancel'] = $this->url->link('extension/extension', 'token=' . $this->session->data['token'] . '&type=payment', true);
+
+        if (version_compare(VERSION, '2.3.0.0', '=>')) {
+            $data['cancel'] = $this->url->link('extension/extension', 'token=' . $this->session->data['token'] . '&type=payment', true);
+        } else {
+            $data['cancel'] = $this->url->link('extension/payment', 'token=' . $this->session->data['token']);
+        }
 
         // Load settings
         $settings = [
             'collector_status',
-	        'collector_country',
 	        'collector_store_mode',
             'collector_store_id_b2c_se',
             'collector_store_id_b2b_se',
@@ -119,7 +131,7 @@ class ControllerExtensionPaymentCollector extends Controller
         $data['column_left'] = $this->load->controller('common/column_left');
         $data['footer']      = $this->load->controller('common/footer');
 
-        $this->response->setOutput($this->load->view('extension/payment/collector', $data));
+        $this->response->setOutput($this->load->view('extension/payment/collector.tpl', $data));
     }
 
     protected function validate()
