@@ -47,6 +47,3 @@ Testpersons can be found here: https://merchant.collectorbank.se/integration/b2c
 **Invoice VAT rate B2C** Invoice VAT rate to be added for the invoice fee (B2C).  
 **Invoice fee (incl. tax) B2B** The invoice fee that will be added for Invoice payments (B2B).  
 **Invoice VAT rate B2B** Invoice VAT rate to be added for the invoice fee (B2B).  
-**Instant Checkout Status** Enable if you want Collector method "Instant Checkout" to be active. Please contact your Collector Bank sales representative for more information.  
-**Instant Checkout: Merchant ID** Please decide what kind of payment your Instant Checkout should work with (usually B2C) and input the corresponding store ID.  
-**Instant Checkout: Country** Please decide which country your Instant Checkout should work with.  

@@ -694,13 +694,4 @@ class ModelCollectorHelper extends Model {
         $this->load->model('collector/api');
         return $this->model_collector_api->getSettings();
     }
-
-    /**
-     * @return bool
-     */
-    public function isInstantCheckoutEnabled()
-    {
-        $settings = $this->getSettings();
-        return (bool) $settings['collector_ic_status'];
-    }
 }

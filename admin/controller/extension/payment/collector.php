@@ -105,9 +105,6 @@ class ControllerExtensionPaymentCollector extends Controller
             'collector_invoice_fee_vat_b2c',
             'collector_invoice_fee_b2b',
             'collector_invoice_fee_vat_b2b',
-            'collector_ic_status',
-            'collector_ic_store_id',
-            'collector_ic_country_code'
         ];
         foreach ($settings as $setting) {
             if (isset($this->request->post[$setting])) {
