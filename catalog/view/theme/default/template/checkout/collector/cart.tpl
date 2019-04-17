@@ -34,7 +34,7 @@
                         <input type="number" min="1" step="1"
                                name="quantity[<?php echo $product['cart_id']; ?>]"
                                value="<?php echo $product['qty']; ?>"
-                               style="width: 50px;"
+                               style="width: 80px;"
                                size="1" class="form-control qty"/>
                         <button type="button" title="<?php echo $view->__('Remove'); ?>" class="btn btn-danger btn-xs remove">
                             <i class="fa fa-times"></i>
