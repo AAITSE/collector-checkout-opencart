@@ -74,16 +74,16 @@ class ControllerCheckoutCollector extends Controller
      */
     protected function getCustomerType()
     {
-    	$settings = $this->getSettings();
-    	switch ($settings['collector_store_mode']) {
-		    case 'b2c':
-		    	return 'private';
-		    case 'b2b':
-		    	return 'company';
-		    default:
-			    return isset($this->session->data['collector_customer_type']) ?
-				    $this->session->data['collector_customer_type'] : 'private';
-	    }
+        $settings = $this->getSettings();
+        switch ($settings['collector_store_mode']) {
+            case 'b2c':
+                return 'private';
+            case 'b2b':
+                return 'company';
+            default:
+                return isset($this->session->data['collector_customer_type']) ?
+                    $this->session->data['collector_customer_type'] : 'private';
+        }
     }
 
     /**
@@ -158,163 +158,151 @@ class ControllerCheckoutCollector extends Controller
         $data['is_logged'] = $this->customer->isLogged();
         $data['shipping_required'] = $this->cart->hasShipping();
 
-	    $data['customer_type'] = $this->getCustomerType();
         $data['countries'] = array_filter($this->getHelper()->getCountries(), function($value, $key) {
             return in_array($value['iso_code_2'], ['SE', 'NO']);
         }, ARRAY_FILTER_USE_BOTH);
 
-        // Remove useless countries
-	    $data['countries'] = array_filter($data['countries'], function($value, $key) use ($data) {
-		    $store_id = $this->getMerchantStoreId($data['customer_type'], $value['iso_code_2']);
-		    return ! empty($store_id);
-	    }, ARRAY_FILTER_USE_BOTH);
+        $data['country_id'] = isset($this->session->data['payment_address']) ?
+            $this->session->data['payment_address']['country_id'] : $this->config->get('config_country_id');
 
-	    $data['collector_country'] = $settings['collector_country'];
-        switch ($data['collector_country']) {
-	        case 'SE':
-		        $country = array_filter($this->getHelper()->getCountries(), function($value, $key) {
-			        return in_array($value['iso_code_2'], ['SE']);
-		        }, ARRAY_FILTER_USE_BOTH);
-		        $country = array_shift($country);
+        // Load Country info
+        $country = $this->model_localisation_country->getCountry($data['country_id']);
 
-		        $data['country_id'] = $country['country_id'];
-		        break;
-	        case 'NO':
-		        $country = array_filter($this->getHelper()->getCountries(), function($value, $key) {
-			        return in_array($value['iso_code_2'], ['NO']);
-		        }, ARRAY_FILTER_USE_BOTH);
-		        $country = array_shift($country);
+        // Verify that selected country_id is possible for use
+        if (!in_array($country['iso_code_2'], ['SE', 'NO'])) {
+            // Set Sweden as default
+            $country = array_filter($this->getHelper()->getCountries(), function($value, $key) {
+                return in_array($value['iso_code_2'], ['SE']);
+            }, ARRAY_FILTER_USE_BOTH);
+            $country = array_shift($country);
 
-		        $data['country_id'] = $country['country_id'];
-		        break;
-	        default:
-	        	// Both
-		        $data['country_id'] = isset($this->session->data['payment_address']) ?
-			        $this->session->data['payment_address']['country_id'] : $this->config->get('config_country_id');
+            // Force country selection
+            $this->session->data['payment_address']['country_id'] = $country['country_id'];
+            $this->session->data['shipping_address']['country_id'] = $country['country_id'];
 
-		        // Load Country info
-		        $country = $this->model_localisation_country->getCountry($data['country_id']);
+            // Force Zone ID
+            if (!isset($this->session->data['payment_address']['zone_id'])) {
+                $this->session->data['payment_address']['zone_id'] = 0;
+            }
 
-		        // Verify that selected country_id is possible for use
-		        if (!in_array($country['iso_code_2'], ['SE', 'NO'])) {
-		        	$countries = $data['countries'];
-		        	$country = array_shift($countries);
-			        $data['country_id'] = $country['country_id'];
-		        }
-		        break;
+            if (!isset($this->session->data['shipping_address']['zone_id'])) {
+                $this->session->data['shipping_address']['zone_id'] = 0;
+            }
         }
 
-	    // Force country selection
-	    $this->session->data['payment_address']['country_id'] = $country['country_id'];
-	    $this->session->data['shipping_address']['country_id'] = $country['country_id'];
-
         $data['store_mode'] = $settings['collector_store_mode'];
+        $data['customer_type'] = $this->getCustomerType();
         $data['store_id'] = $this->getMerchantStoreId($data['customer_type'], $country['iso_code_2']);
         $data['locale'] = $country['iso_code_2'] === 'NO' ? 'nb-NO' : 'sv-SE';
 
         // Init Collector
         $cart_items = $this->getHelper()->getCartItems();
         $collector_items = $this->getHelper()->getCollectorItems($cart_items, $data['customer_type']);
-	    if (count($collector_items['items']) === 0) {
-		    // No items in cart
-		    $this->response->redirect($this->url->link('checkout/cart'));
-	    }
+        if (count($collector_items['items']) === 0) {
+            // No items in cart
+            $this->response->redirect($this->url->link('checkout/cart'));
+        }
 
         // Update Quote
         $quote = $this->_makeQuote();
 
-	    $private_id = isset($this->session->data['collector_private_id']) ? $this->session->data['collector_private_id'] : null;
+        $private_id = !empty($this->session->data['collector_private_id']) ? $this->session->data['collector_private_id'] : null;
+        if (!$private_id) {
+            // Init Checkout
+            $params = [
+                'storeId' => $data['store_id'],
+                'countryCode' => $country['iso_code_2'],
+                'redirectPageUri' => $this->getView()->url('checkout/collector/success'),
+                'merchantTermsUri' => $settings['collector_merchant_terms_url'],
+                'notificationUri' => $this->getView()->url('checkout/collector/ipn', ['token' => $quote['token']]),
+                'cart' => [
+                    'items' => $collector_items['items']
+                ]
+            ];
+            if (count($collector_items['fees']) > 0) {
+                $params['fees'] = $collector_items['fees'];
+            }
 
-	    try {
-		    if (!$private_id) {
-			    // Init Checkout
-			    $params = [
-				    'storeId' => $data['store_id'],
-				    'countryCode' => $country['iso_code_2'],
-				    'redirectPageUri' => $this->getView()->url('checkout/collector/success'),
-				    'merchantTermsUri' => $settings['collector_merchant_terms_url'],
-				    'notificationUri' => $this->getView()->url('checkout/collector/ipn', ['token' => $quote['token']]),
-				    'cart' => [
-					    'items' => $collector_items['items']
-				    ]
-			    ];
-			    if (count($collector_items['fees']) > 0) {
-				    $params['fees'] = $collector_items['fees'];
-			    }
+            try {
+                $result = $this->getApi()->request('POST', '/checkout', $params);
+            } catch (Exception $e) {
+                $message = $e->getMessage();
+                echo 'Error: ' . $message;
+                exit();
+            }
 
-			    try {
-				    $result = $this->getApi()->request('POST', '/checkout', $params);
-			    } catch (Exception $e) {
-				    $message = $e->getMessage();
-				    echo 'Error: ' . $message;
-				    exit();
-			    }
+            // Store privateId in session
+            $this->session->data['collector_private_id'] = $result['data']['privateId'];
 
-			    // Store privateId in session
-			    $this->session->data['collector_private_id'] = $result['data']['privateId'];
+            // Save in db
+            $this->getPayments()->add([
+                'quote_id' => $quote['quote_id'],
+                'private_id' => $result['data']['privateId'],
+                'public_token' => $result['data']['publicToken'],
+                'cart_items' => json_encode($cart_items),
+                'expiresAt' => $result['data']['expiresAt'],
+                'country_code' => $country['iso_code_2'],
+                'store_id' => $data['store_id']
+            ]);
 
-			    // Save in db
-			    $this->getPayments()->add([
-				    'quote_id' => $quote['quote_id'],
-				    'private_id' => $result['data']['privateId'],
-				    'public_token' => $result['data']['publicToken'],
-				    'cart_items' => json_encode($cart_items),
-				    'expiresAt' => $result['data']['expiresAt'],
-				    'country_code' => $country['iso_code_2'],
-				    'store_id' => $data['store_id']
-			    ]);
+            $public_token = $result['data']['publicToken'];
+        } else {
+            // Update Checkout
 
-			    $public_token = $result['data']['publicToken'];
-		    } else {
-			    // Update Checkout
-			    // Update items
-			    $params = [
-				    'items' => $collector_items['items'],
-			    ];
-			    $result = $this->getApi()->request('PUT', sprintf('/merchants/%s/checkouts/%s/cart', $data['store_id'], $private_id), $params);
+            // Update Collector
+            // Update items
+            $params = [
+                'items' => $collector_items['items'],
+            ];
+            try {
+                $result = $this->getApi()->request('PUT', sprintf('/merchants/%s/checkouts/%s/cart', $data['store_id'], $private_id), $params);
+            } catch (Exception $e) {
+                // Workaround for "The store id does not match the store id in the Checkout session"
+                // It's happen when switching of country
+                if (strpos($e, 'StoreId_Mismatch') !== false) {
+                    unset($this->session->data['collector_private_id']);
+                    return $this->index();
+                }
 
-			    // Update fees
-			    $params = $collector_items['fees'];
-			    if ($this->cart->hasShipping()) {
-				    $shipping = $this->getHelper()->getCartShipping();
-				    if ($shipping['unit_price'] < 0.1) {
-					    $params['shipping'] = null;
-				    }
-			    } else {
-				    $params['shipping'] = null;
-			    }
+                throw $e;
+            }
 
-			    $result = $this->getApi()->request('PUT', sprintf('/merchants/%s/checkouts/%s/fees', $data['store_id'], $private_id), $params);
+            // Update fees
+            $params = $collector_items['fees'];
+            if ($this->cart->hasShipping()) {
+                $shipping = $this->getHelper()->getCartShipping();
+                if ($shipping['unit_price'] < 0.1) {
+                    $params['shipping'] = null;
+                }
+            } else {
+                $params['shipping'] = null;
+            }
 
-			    // Update Quote
-			    $this->_makeQuote();
+            $result = $this->getApi()->request('PUT', sprintf('/merchants/%s/checkouts/%s/fees', $data['store_id'], $private_id), $params);
 
-			    // Update cart items
-			    $quote_id = isset($this->session->data['collector_quote_id']) ? $this->session->data['collector_quote_id'] : null;
-			    $payment = $this->getPayments()->getByQuoteId($quote_id);
-			    $this->getPayments()->update($payment['id'], [
-				    'cart_items' => json_encode($cart_items),
-			    ]);
+            // Update Quote
+            $this->_makeQuote();
 
-			    $public_token = $payment['public_token'];
-		    }
-	    } catch (Exception $e) {
-		    if (strpos($e->getMessage(), 'StoreId_Mismatch') !== false) {
-			    unset($this->session->data['collector_quote_id']);
-			    unset($this->session->data['collector_private_id']);
-		    }
+            // Update cart items
+            $quote_id = isset($this->session->data['collector_quote_id']) ? $this->session->data['collector_quote_id'] : null;
+            $payment = $this->getPayments()->getByQuoteId($quote_id);
+            $this->getPayments()->update($payment['id'], [
+                'cart_items' => json_encode($cart_items),
+            ]);
 
-		    // @todo Improve error output
-		    echo 'Error: ' . $e->getMessage();
-		    exit();
-	    }
+            $public_token = $payment['public_token'];
+        }
 
         $data['collector'] = [
             'frontend_api_url' => $settings['collector_mode'] === 'live' ? self::FRONTEND_URL_LIVE : self::FRONTEND_URL_TEST,
             'token' => $public_token
         ];
 
-        $this->response->setOutput($this->getView()->render('checkout/collector', $data));
+        if (version_compare(VERSION, '2.3.0.0', '=>')) {
+            $this->response->setOutput($this->getView()->render('checkout/collector.tpl', $data));
+        } else {
+            $this->response->setOutput($this->getView()->render('default/template/checkout/collector.tpl', $data));
+        }
     }
 
     /**
@@ -471,7 +459,11 @@ class ControllerCheckoutCollector extends Controller
         $data['footer'] = $this->load->controller('common/footer');
         $data['header'] = $this->load->controller('common/header');
 
-        $this->response->setOutput($this->getView()->render('checkout/collector/success', $data));
+        if (version_compare(VERSION, '2.3.0.0', '=>')) {
+            $this->response->setOutput($this->getView()->render('checkout/collector/success.tpl', $data));
+        } else {
+            $this->response->setOutput($this->getView()->render('default/template/checkout/collector/success.tpl', $data));
+        }
     }
 
     /**
@@ -481,7 +473,7 @@ class ControllerCheckoutCollector extends Controller
     {
         $log = new Log('collector_ipn.log');
         $this->load->model('localisation/country');
-	    $this->load->model('checkout/order');
+        $this->load->model('checkout/order');
 
         try {
             $token = isset($this->request->get['token']) ? $this->request->get['token'] : null;
@@ -681,14 +673,14 @@ class ControllerCheckoutCollector extends Controller
                 'purchaseStatus' => $purchaseStatus
             ]);
 
-	        // B2B: Add delivery Contact Information
-	        if (isset($info['data']['businessCustomer']) && isset($info['data']['businessCustomer']['deliveryContactInformation'])) {
-		        $order_status_id = $this->config->get('config_order_status_id');
-		        $email = $info['data']['businessCustomer']['deliveryContactInformation']['email'];
-		        $phone = $info['data']['businessCustomer']['deliveryContactInformation']['mobilePhoneNumber'];
-		        $message = sprintf('Delivery Contact Information. Email: %s Phone: %s', $email, $phone);
-		        $this->model_checkout_order->addOrderHistory($order_id, $order_status_id, $message, false);
-	        }
+            // B2B: Add delivery Contact Information
+            if (isset($info['data']['businessCustomer']) && isset($info['data']['businessCustomer']['deliveryContactInformation'])) {
+                $order_status_id = $this->config->get('config_order_status_id');
+                $email = $info['data']['businessCustomer']['deliveryContactInformation']['email'];
+                $phone = $info['data']['businessCustomer']['deliveryContactInformation']['mobilePhoneNumber'];
+                $message = sprintf('Delivery Contact Information. Email: %s Phone: %s', $email, $phone);
+                $this->model_checkout_order->addOrderHistory($order_id, $order_status_id, $message, false);
+            }
 
             switch ($purchaseStatus) {
                 case 'Preliminary':
@@ -764,7 +756,7 @@ class ControllerCheckoutCollector extends Controller
             // Wait for order place
             $time = 0;
             do {
-                $payment = $this->getPayments()->getByPurchaseId($InvoiceNo);
+                $payment = $this->getPayments()->getByOrderId($OrderNo);
                 $time++;
                 sleep(1);
                 if ($time > 30) {
@@ -773,7 +765,7 @@ class ControllerCheckoutCollector extends Controller
             } while (!$payment || empty($payment['order_id']));
 
             if (!$payment) {
-                throw new Exception('Failed to get purchase');
+                throw new Exception('Failed to get payment data');
             }
 
             if (!in_array($InvoiceStatus, [0, 1, 5])) {
@@ -787,30 +779,30 @@ class ControllerCheckoutCollector extends Controller
                 $order_status_id = $settings['collector_order_status_preliminary_id'];
                 $new_status_str = 'Preliminary';
 
-	            $this->getPayments()->update($payment['id'], [
-		            'purchaseStatus' => 'Preliminary'
-	            ]);
+                $this->getPayments()->update($payment['id'], [
+                    'purchaseStatus' => 'Preliminary'
+                ]);
             } elseif ($InvoiceStatus == 0) {
                 $order_status_id = $settings['collector_order_status_pending_id'];
                 $new_status_str = 'OnHold';
 
-	            $this->getPayments()->update($payment['id'], [
-		            'purchaseStatus' => 'OnHold'
-	            ]);
+                $this->getPayments()->update($payment['id'], [
+                    'purchaseStatus' => 'OnHold'
+                ]);
             } elseif ($InvoiceStatus == 5) {
                 $order_status_id = $settings['collector_order_status_rejected_id'];
                 $new_status_str = 'Rejected';
 
-	            $this->getPayments()->update($payment['id'], [
-		            'purchaseStatus' => 'Rejected'
-	            ]);
+                $this->getPayments()->update($payment['id'], [
+                    'purchaseStatus' => 'Rejected'
+                ]);
             }
 
             if (empty($order_status_id)) {
                 $order_status_id = $this->config->get('config_order_status_id');
             }
 
-	        $this->load->model('checkout/order');
+            $this->load->model('checkout/order');
             $this->model_checkout_order->addOrderHistory($order_id, $order_status_id, sprintf('Order is now %s', $new_status_str), true);
             $log->write('Anti Fraud callback by Collector: Internal (' . $InvoiceNo . ') Status changed to ID: ' . $new_status_str);
         } catch (Exception $e) {
@@ -844,7 +836,12 @@ class ControllerCheckoutCollector extends Controller
             'view' => $this->getView(),
             'products' => $products
         ];
-        $this->response->setOutput($this->load->view('checkout/collector/cart', $data));
+
+        if (version_compare(VERSION, '2.3.0.0', '=>')) {
+            $this->response->setOutput($this->getView()->render('checkout/collector/cart.tpl', $data));
+        } else {
+            $this->response->setOutput($this->getView()->render('default/template/checkout/collector/cart.tpl', $data));
+        }
     }
 
     /**
@@ -866,7 +863,11 @@ class ControllerCheckoutCollector extends Controller
             ])
         ];
 
-        $this->response->setOutput($this->load->view('checkout/collector/totals', $data));
+        if (version_compare(VERSION, '2.3.0.0', '=>')) {
+            $this->response->setOutput($this->getView()->render('checkout/collector/totals.tpl', $data));
+        } else {
+            $this->response->setOutput($this->getView()->render('default/template/checkout/collector/totals.tpl', $data));
+        }
     }
 
     /**
@@ -874,91 +875,41 @@ class ControllerCheckoutCollector extends Controller
      */
     public function set_customer_type()
     {
-	    $customer_type = isset($this->request->post['customer_type']) ? $this->request->post['customer_type'] : 'private';
+        $customer_type = isset($this->request->post['customer_type']) ? $this->request->post['customer_type'] : 'private';
 
-	    // Get current Country
-	    $this->load->model('localisation/country');
-	    $country_id = isset($this->session->data['payment_address']) ?
-		    $this->session->data['payment_address']['country_id'] : $this->config->get('config_country_id');
+        // Get current Country
+        $this->load->model('localisation/country');
+        $country_id = isset($this->session->data['payment_address']) ?
+            $this->session->data['payment_address']['country_id'] : $this->config->get('config_country_id');
 
-	    // Load Country info
-	    $country = $this->model_localisation_country->getCountry($country_id);
+        // Load Country info
+        $country = $this->model_localisation_country->getCountry($country_id);
 
-	    // Verify that selected country_id is possible for use
-	    if (!in_array($country['iso_code_2'], ['SE', 'NO'])) {
-		    // Get Sweden as default
-		    $country = array_filter($this->getHelper()->getCountries(), function($value, $key) {
-			    return in_array($value['iso_code_2'], ['SE']);
-		    }, ARRAY_FILTER_USE_BOTH);
-		    $country = array_shift($country);
-	    }
+        // Verify that selected country_id is possible for use
+        if (!in_array($country['iso_code_2'], ['SE', 'NO'])) {
+            // Get Sweden as default
+            $country = array_filter($this->getHelper()->getCountries(), function($value, $key) {
+                return in_array($value['iso_code_2'], ['SE']);
+            }, ARRAY_FILTER_USE_BOTH);
+            $country = array_shift($country);
+        }
 
-	    // Check Store ID is defined
-	    $store_id = $this->getMerchantStoreId($customer_type, strtolower($country['iso_code_2']));
-	    if (empty($store_id)) {
-		    $this->response->addHeader('Content-Type: application/json');
-		    $this->response->setOutput(json_encode(['success' => false, 'message' => $this->getView()->__('Unable to switch customer type')]));
-		    return;
-	    }
+        // Check Store ID is defined
+        $store_id = $this->getMerchantStoreId($customer_type, strtolower($country['iso_code_2']));
+        if (empty($store_id)) {
+            $this->response->addHeader('Content-Type: application/json');
+            $this->response->setOutput(json_encode(['success' => false, 'message' => $this->getView()->__('Unable to switch customer type')]));
+            return;
+        }
 
-	    // Unset quote
-	    unset($this->session->data['collector_quote_id']);
-	    unset($this->session->data['collector_private_id']);
+        // Unset quote
+        unset($this->session->data['collector_quote_id']);
+        unset($this->session->data['collector_private_id']);
 
         $this->session->data['collector_customer_type'] = $customer_type;
         $this->response->addHeader('Content-Type: application/json');
         $this->response->setOutput(json_encode(['success' => true]));
     }
-
-	/**
-	 * Set Country
-	 */
-	public function set_country()
-	{
-		$country_id = isset($this->request->post['country_id']) ? $this->request->post['country_id'] : null;
-		if (empty($country_id)) {
-			$country_id = $this->config->get('config_country_id');
-		}
-
-		// Load Country info
-		$this->load->model('localisation/country');
-		$country = $this->model_localisation_country->getCountry($country_id);
-
-		// Verify that selected country_id is possible for use
-		if (!in_array($country['iso_code_2'], ['SE', 'NO'])) {
-			// Get default country/store
-			foreach (array('SE', 'NO') as $country_code) {
-				$store_id = $this->getMerchantStoreId($this->getCustomerType(), $country_code);
-				if (!empty($store_id)) {
-					$country = array_filter($this->getHelper()->getCountries(), function($value, $key) use ($country_code) {
-						return in_array($value['iso_code_2'], [$country_code]);
-					}, ARRAY_FILTER_USE_BOTH);
-					$country = array_shift($country);
-					break;
-				}
-			}
-
-			if (empty($store_id)) {
-				// Error: Store ID empty
-				unset($this->session->data['payment_address']);
-				unset($this->session->data['shipping_address']);
-				$this->response->addHeader('Content-Type: application/json');
-				$this->response->setOutput(json_encode(['success' => true]));
-				return;
-			}
-		}
-
-		// Set Country Id
-		$this->session->data['payment_address']['country_id'] = $country_id;
-		$this->session->data['shipping_address']['country_id'] = $country_id;
-
-		// Unset quote
-		unset($this->session->data['collector_quote_id']);
-		unset($this->session->data['collector_private_id']);
-
-		$this->response->addHeader('Content-Type: application/json');
-		$this->response->setOutput(json_encode(['success' => true]));
-	}
 
     /**
      * Shipping Methods Action
@@ -981,6 +932,19 @@ class ControllerCheckoutCollector extends Controller
         $this->session->data['payment_address']['country_id'] = $country_id;
         $this->session->data['shipping_address']['country_id'] = $country_id;
 
+        // Set Zone ID
+        //$this->load->model('localisation/zone');
+        //$zones = $this->model_localisation_zone->getZonesByCountryId($this->session->data['shipping_address']['country_id']);
+        //$zone = array_shift($zones);
+
+        if (!isset($this->session->data['payment_address']['zone_id'])) {
+            $this->session->data['payment_address']['zone_id'] = 0;
+        }
+
+        if (!isset($this->session->data['shipping_address']['zone_id'])) {
+            $this->session->data['shipping_address']['zone_id'] = 0;
+        }
+
         $shipping_method_code = false;
         if (isset($this->session->data['shipping_method'])) {
             $shipping_method_code = $this->session->data['shipping_method']['code'];
@@ -993,15 +957,17 @@ class ControllerCheckoutCollector extends Controller
         ];
         $methods = $this->getHelper()->getShippingMethods($address);
 
-
-
         $data = [
             'view' => $this->getView(),
             'methods' => $methods,
             'code' => $shipping_method_code
         ];
 
-        $this->response->setOutput($this->load->view('checkout/collector/shipping_methods', $data));
+        if (version_compare(VERSION, '2.3.0.0', '=>')) {
+            $this->response->setOutput($this->getView()->render('checkout/collector/shipping_methods.tpl', $data));
+        } else {
+            $this->response->setOutput($this->getView()->render('default/template/checkout/collector/shipping_methods.tpl', $data));
+        }
     }
 
     /**
@@ -1278,6 +1244,6 @@ class ControllerCheckoutCollector extends Controller
     {
         $this->cart->clear();
         unset($this->session->data['collector_quote_id']);
-	    unset($this->session->data['collector_private_id']);
+        unset($this->session->data['collector_private_id']);
     }
 }

@@ -175,45 +175,79 @@ class ModelCollectorHelper extends Model {
         $currency_code = $this->_session('currency');
         $currency_value = $this->currency->getValue($currency_code);
 
-        $totals = array();
-        $taxes = $this->cart->getTaxes();
-        $total = 0;
-
-        // Because __call can not keep var references so we put them into an array.
-        $total_data = array(
-            'totals' => &$totals,
-            'taxes'  => &$taxes,
-            'total'  => &$total
-        );
-
         $this->load->model('extension/extension');
 
-        $sort_order = array();
+        if (version_compare(VERSION, '2.3.0.0', '=>')) {
+            $totals = array();
+            $taxes = $this->cart->getTaxes();
+            $total = 0;
 
-        $results = $this->model_extension_extension->getExtensions('total');
+            // Because __call can not keep var references so we put them into an array.
+            $total_data = array(
+                'totals' => &$totals,
+                'taxes'  => &$taxes,
+                'total'  => &$total
+            );
 
-        foreach ($results as $key => $value) {
-            $sort_order[$key] = $this->config->get($value['code'] . '_sort_order');
-        }
-        array_multisort($sort_order, SORT_ASC, $results);
+            $sort_order = array();
 
-        foreach ($results as $result) {
-            if ($this->config->get($result['code'] . '_status')) {
-                $this->load->model('extension/total/' . $result['code']);
+            $results = $this->model_extension_extension->getExtensions('total');
 
-                // We have to put the totals in an array so that they pass by reference.
-                $this->{'model_extension_total_' . $result['code']}->getTotal($total_data);
+            foreach ($results as $key => $value) {
+                $sort_order[$key] = $this->config->get($value['code'] . '_sort_order');
             }
-        }
+            array_multisort($sort_order, SORT_ASC, $results);
 
-        $sort_order = array();
-        foreach ($totals as $key => &$value) {
-            $value['total'] = $this->currency->format($value['value'], $currency_code, $currency_value, false);
-            $sort_order[$key] = $value['sort_order'];
-        }
-        array_multisort($sort_order, SORT_ASC, $totals);
+            foreach ($results as $result) {
+                if ($this->config->get($result['code'] . '_status')) {
+                    $this->load->model('extension/total/' . $result['code']);
 
-        return $totals;
+                    // We have to put the totals in an array so that they pass by reference.
+                    $this->{'model_extension_total_' . $result['code']}->getTotal($total_data);
+                }
+            }
+
+            $sort_order = array();
+            foreach ($totals as $key => &$value) {
+                $value['total'] = $this->currency->format($value['value'], $currency_code, $currency_value, false);
+                $sort_order[$key] = $value['sort_order'];
+            }
+            array_multisort($sort_order, SORT_ASC, $totals);
+
+            return $totals;
+        } else {
+            $total_data = array();
+            $total = 0;
+            $taxes = $this->cart->getTaxes();
+
+            $sort_order = array();
+
+            $results = $this->model_extension_extension->getExtensions('total');
+
+            foreach ($results as $key => $value) {
+                $sort_order[$key] = $this->config->get($value['code'] . '_sort_order');
+            }
+            array_multisort($sort_order, SORT_ASC, $results);
+
+            foreach ($results as $result) {
+                if ($this->config->get($result['code'] . '_status')) {
+                    $this->load->model('total/' . $result['code']);
+
+                    $this->{'model_total_' . $result['code']}->getTotal($total_data, $total, $taxes);
+                }
+            }
+
+            $sort_order = array();
+
+            foreach ($total_data as $key => &$value) {
+                $value['total'] = $this->currency->format($value['value'], $currency_code, $currency_value, false);
+                $sort_order[$key] = $value['sort_order'];
+            }
+
+            array_multisort($sort_order, SORT_ASC, $total_data);
+
+            return $total_data;
+        }
     }
 
     public function getShippingMethods($address)
@@ -231,9 +265,13 @@ class ModelCollectorHelper extends Model {
 
         foreach ($results as $result) {
             if ($this->config->get($result['code'] . '_status')) {
-                $this->load->model('extension/shipping/' . $result['code']);
-
-                $quote = $this->{'model_extension_shipping_' . $result['code']}->getQuote($address);
+                if (version_compare(VERSION, '2.3.0.0', '=>')) {
+                    $this->load->model('extension/shipping/' . $result['code']);
+                    $quote = $this->{'model_extension_shipping_' . $result['code']}->getQuote($address);
+                } else {
+                    $this->load->model('shipping/' . $result['code']);
+                    $quote = $this->{'model_shipping_' . $result['code']}->getQuote($address);
+                }
 
                 if ($quote) {
                     $method_data[$result['code']] = array(

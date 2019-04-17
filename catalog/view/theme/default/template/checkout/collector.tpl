@@ -42,7 +42,11 @@
                 <h1><?php echo $view->__('Checkout'); ?></h1>
                 <div class="collector-checkout">
                     <?php if (!$is_logged): ?>
-                        <?php echo $view->render('checkout/collector/account', $data); ?>
+                        <?php if (version_compare(VERSION, '2.3.0.0', '=>')): ?>
+                            <?php echo $view->render('checkout/collector/account.tpl', $data); ?>
+                        <?php else: ?>
+                            <?php echo $view->render('default/template/checkout/collector/account.tpl', $data); ?>
+                        <?php endif; ?>
                     <?php endif; ?>
                     <h2><?php echo $view->__('Cart'); ?></h2>
                     <div id="collector-cart" class="row">&nbsp</div>
