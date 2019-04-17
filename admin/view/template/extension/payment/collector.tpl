@@ -310,44 +310,6 @@
                                        placeholder="<?php echo $entry_invoice_fee_vat_b2b; ?>" id="collector_invoice_fee_vat_b2b" class="form-control" />
                             </div>
                         </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="collector_ic_status">
-                                Instant Checkout: Status
-                            </label>
-                            <div class="col-sm-10">
-                                <select name="collector_ic_status" id="collector_ic_status" class="form-control">
-                                    <?php if ($collector_ic_status): ?>
-                                        <option value="1" selected="selected"><?php echo $text_enabled; ?></option>
-                                        <option value="0"><?php echo $text_disabled; ?></option>
-                                    <?php else: ?>
-                                        <option value="1"><?php echo $text_enabled; ?></option>
-                                        <option value="0" selected="selected"><?php echo $text_disabled; ?></option>
-                                    <?php endif; ?>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="collector_ic_store_id">
-                                Instant Checkout: Merchant ID
-                            </label>
-                            <div class="col-sm-10">
-                                <input type="text" name="collector_ic_store_id" id="collector_ic_store_id" value="<?php echo $collector_ic_store_id; ?>" class="form-control"/>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="collector_ic_country_code">
-                                Instant Checkout: Country
-                            </label>
-                            <div class="col-sm-10">
-                                <select name="collector_ic_country_code" id="collector_ic_country_code" class="form-control">
-                                    <option value="SE" <?php echo $collector_ic_country_code === 'SE' ? 'selected' : ''; ?>>Sweden</option>
-                                    <option value="NO" <?php echo $collector_ic_country_code === 'NO' ? 'selected' : ''; ?>>Norway</option>
-                                </select>
-                            </div>
-                        </div>
                     </form>
                 </div>
             </div>

@@ -30,9 +30,6 @@ class ModelCollectorApi extends Model
             'collector_invoice_fee_vat_b2c' => 0,
             'collector_invoice_fee_b2b' => 0,
             'collector_invoice_fee_vat_b2b' => 0,
-            'collector_ic_status' => 0,
-            'collector_ic_store_id' => '',
-            'collector_ic_country_code' => 'SE'
         ];
 
         $this->load->model('setting/setting');
