@@ -996,13 +996,23 @@ class ControllerCheckoutCollector extends Controller
             }, ARRAY_FILTER_USE_BOTH);
             $product = array_shift($products);
 
-            $json = [
-                'action' => 'update',
-                'cart_id' => $cart_id,
-                'qty' => $qty,
-                'unit_price' => $this->getView()->format($product['price_with_tax'] / $product['qty']),
-                'total_price' => $this->getView()->format($product['price_with_tax'])
-            ];
+            if ($product) {
+                $unit_price = $product['qty'] > 0 ? $product['price_with_tax'] / $product['qty'] : 0;
+
+                $json = [
+                    'action' => 'update',
+                    'cart_id' => $cart_id,
+                    'qty' => $qty,
+                    'unit_price' => $this->getView()->format($unit_price),
+                    'total_price' => $this->getView()->format($product['price_with_tax'])
+                ];
+            } else {
+                // Item was removed before?
+                $json = [
+                    'action' => 'remove',
+                    'cart_id' => $cart_id
+                ];
+            }
         } else {
             $this->cart->remove($cart_id);
             $json = [
