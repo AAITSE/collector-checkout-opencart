@@ -97,9 +97,9 @@
                     <h2><?php echo $view->__('Place Order'); ?></h2>
                     <div id="collector-checkout" class="row">
                         <?php if ($customer_type === 'private'): ?>
-                            <script src="<?php echo $collector['frontend_api_url']; ?>/collector-checkout-loader.js" data-token="<?php echo $collector['token']; ?>" data-lang="<?php echo $locale; ?>" data-padding="none"></script>
+                            <script src="<?php echo $collector['frontend_api_url']; ?>/collector-checkout-loader.js" data-token="<?php echo $collector['token']; ?>" data-lang="<?php echo $locale; ?>"></script>
                         <?php else: ?>
-                            <script src="<?php echo $collector['frontend_api_url']; ?>/collector-checkout-loader.js" data-variant="b2b" data-token="<?php echo $collector['token']; ?>" data-lang="<?php echo $locale; ?>" data-padding="none"></script>
+                            <script src="<?php echo $collector['frontend_api_url']; ?>/collector-checkout-loader.js" data-variant="b2b" data-token="<?php echo $collector['token']; ?>" data-lang="<?php echo $locale; ?>"></script>
                         <?php endif;?>
                     </div>
 

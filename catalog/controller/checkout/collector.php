@@ -984,6 +984,8 @@ class ControllerCheckoutCollector extends Controller
      */
     public function cart_update()
     {
+        $this->load->language('checkout/cart');
+
         $cart_id = $this->request->post['cart_id'];
         $qty = (int) $this->request->post['qty'];
 
@@ -996,13 +998,23 @@ class ControllerCheckoutCollector extends Controller
             }, ARRAY_FILTER_USE_BOTH);
             $product = array_shift($products);
 
-            $json = [
-                'action' => 'update',
-                'cart_id' => $cart_id,
-                'qty' => $qty,
-                'unit_price' => $this->getView()->format($product['price_with_tax'] / $product['qty']),
-                'total_price' => $this->getView()->format($product['price_with_tax'])
-            ];
+            if ($product) {
+                $unit_price = $product['qty'] > 0 ? $product['price_with_tax'] / $product['qty'] : 0;
+
+                $json = [
+                    'action' => 'update',
+                    'cart_id' => $cart_id,
+                    'qty' => $qty,
+                    'unit_price' => $this->getView()->format($unit_price),
+                    'total_price' => $this->getView()->format($product['price_with_tax'])
+                ];
+            } else {
+                // Item was removed before?
+                $json = [
+                    'action' => 'remove',
+                    'cart_id' => $cart_id
+                ];
+            }
         } else {
             $this->cart->remove($cart_id);
             $json = [
@@ -1011,11 +1023,34 @@ class ControllerCheckoutCollector extends Controller
             ];
         }
 
-        unset($this->session->data['shipping_method']);
-        unset($this->session->data['shipping_methods']);
-        unset($this->session->data['payment_method']);
-        unset($this->session->data['payment_methods']);
+        //unset($this->session->data['shipping_method']);
+        //unset($this->session->data['shipping_methods']);
+        //unset($this->session->data['payment_method']);
+        //unset($this->session->data['payment_methods']);
         unset($this->session->data['reward']);
+
+        // Calculate totals
+        if (isset($this->session->data['payment_address']['country_id'])) {
+            $country_id = $this->session->data['payment_address']['country_id'];
+        } else {
+            $country_id = $this->config->get('config_country_id');
+        }
+
+        $amount = 0;
+        $totals = $this->getHelper()->getCartTotals([
+            'country_id' => $country_id,
+            'zone_id' => 0
+        ]);
+        foreach ($totals as $total) {
+            if ($total['code'] === 'total') {
+                $amount = $total['value'];
+            }
+        }
+
+        $json['total'] = sprintf($this->language->get('text_items'),
+            $this->cart->countProducts() + (isset($this->session->data['vouchers']) ? count($this->session->data['vouchers']) : 0),
+            $this->getView()->format($amount)
+        );
 
         // Update Quote
         $this->_makeQuote();
@@ -1059,6 +1094,22 @@ class ControllerCheckoutCollector extends Controller
         unset($this->session->data['shipping_method']);
         if (isset($shipping[0]) && isset($shipping[1])) {
             $this->session->data['shipping_method'] = $this->session->data['shipping_methods'][$shipping[0]]['quote'][$shipping[1]];
+        }
+
+        $this->response->addHeader('Content-Type: application/json');
+        $this->response->setOutput(json_encode(['success' => true]));
+    }
+
+    /**
+     * Set Country
+     */
+    public function set_country()
+    {
+        if (isset($this->request->post['country_id'])) {
+            $country_id = $this->request->post['country_id'];
+
+            $this->session->data['payment_address']['country_id'] = $country_id;
+            $this->session->data['shipping_address']['country_id'] = $country_id;
         }
 
         $this->response->addHeader('Content-Type: application/json');
