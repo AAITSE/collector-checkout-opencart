@@ -984,6 +984,8 @@ class ControllerCheckoutCollector extends Controller
      */
     public function cart_update()
     {
+        $this->load->language('checkout/cart');
+
         $cart_id = $this->request->post['cart_id'];
         $qty = (int) $this->request->post['qty'];
 
@@ -1026,6 +1028,29 @@ class ControllerCheckoutCollector extends Controller
         //unset($this->session->data['payment_method']);
         //unset($this->session->data['payment_methods']);
         unset($this->session->data['reward']);
+
+        // Calculate totals
+        if (isset($this->session->data['payment_address']['country_id'])) {
+            $country_id = $this->session->data['payment_address']['country_id'];
+        } else {
+            $country_id = $this->config->get('config_country_id');
+        }
+
+        $amount = 0;
+        $totals = $this->getHelper()->getCartTotals([
+            'country_id' => $country_id,
+            'zone_id' => 0
+        ]);
+        foreach ($totals as $total) {
+            if ($total['code'] === 'total') {
+                $amount = $total['value'];
+            }
+        }
+
+        $json['total'] = sprintf($this->language->get('text_items'),
+            $this->cart->countProducts() + (isset($this->session->data['vouchers']) ? count($this->session->data['vouchers']) : 0),
+            $this->getView()->format($amount)
+        );
 
         // Update Quote
         $this->_makeQuote();

@@ -58,6 +58,10 @@ $(document).on( 'change', '.collector-cart .qty', function(e) {
             row_el.remove();
         }
 
+        if (response.hasOwnProperty('total')) {
+            $('#cart-total').text(response.total);
+        }
+
         update_checkout(function (err) {
             if (err) {
                 alert(err);
