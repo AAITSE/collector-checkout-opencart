@@ -1021,10 +1021,10 @@ class ControllerCheckoutCollector extends Controller
             ];
         }
 
-        unset($this->session->data['shipping_method']);
-        unset($this->session->data['shipping_methods']);
-        unset($this->session->data['payment_method']);
-        unset($this->session->data['payment_methods']);
+        //unset($this->session->data['shipping_method']);
+        //unset($this->session->data['shipping_methods']);
+        //unset($this->session->data['payment_method']);
+        //unset($this->session->data['payment_methods']);
         unset($this->session->data['reward']);
 
         // Update Quote
@@ -1069,6 +1069,22 @@ class ControllerCheckoutCollector extends Controller
         unset($this->session->data['shipping_method']);
         if (isset($shipping[0]) && isset($shipping[1])) {
             $this->session->data['shipping_method'] = $this->session->data['shipping_methods'][$shipping[0]]['quote'][$shipping[1]];
+        }
+
+        $this->response->addHeader('Content-Type: application/json');
+        $this->response->setOutput(json_encode(['success' => true]));
+    }
+
+    /**
+     * Set Country
+     */
+    public function set_country()
+    {
+        if (isset($this->request->post['country_id'])) {
+            $country_id = $this->request->post['country_id'];
+
+            $this->session->data['payment_address']['country_id'] = $country_id;
+            $this->session->data['shipping_address']['country_id'] = $country_id;
         }
 
         $this->response->addHeader('Content-Type: application/json');

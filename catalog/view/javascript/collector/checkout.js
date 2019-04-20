@@ -58,7 +58,7 @@ $(document).on( 'change', '.collector-cart .qty', function(e) {
             row_el.remove();
         }
 
-        get_totals(function (err) {
+        update_checkout(function (err) {
             if (err) {
                 alert(err);
                 el.prop('disabled', false);
@@ -108,7 +108,7 @@ $(document).on('click', '.collector-cart .remove', function(e) {
             row_el.remove();
         }
 
-        get_totals(function (err) {
+        update_checkout(function (err) {
             if (err) {
                 alert(err);
                 el.prop('disabled', false);
