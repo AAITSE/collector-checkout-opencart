@@ -16,8 +16,12 @@
             <?php endif; ?>
             <div id="content" class="<?php echo $class; ?>">
                 <?php echo $content_top; ?>
-                <h1><?php echo $heading_title; ?></h1>
-                <?php echo $text_message; ?>
+                <?php if (!empty($collector_token)): ?>
+                    <script src="<?php echo $collector_frontend_api_url; ?>/collector-checkout-loader.js" data-token="<?php echo $collector_token; ?>" data-lang="<?php echo $collector_locale; ?>" data-padding="none"></script>
+                <?php else: ?>
+                    <h1><?php echo $heading_title; ?></h1>
+                    <?php echo $text_message; ?>
+                <?php endif; ?>
                 <div class="buttons">
                     <div class="pull-right">
                         <a href="<?php echo $continue; ?>" class="btn btn-primary">

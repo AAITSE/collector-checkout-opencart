@@ -298,6 +298,11 @@ class ControllerCheckoutCollector extends Controller
             'token' => $public_token
         ];
 
+        // Set session variables for
+        $this->session->data['collector_token'] = $public_token;
+        $this->session->data['collector_frontend_api_url'] = $data['collector']['frontend_api_url'];
+        $this->session->data['collector_locale'] = $data['locale'];
+
         if (version_compare(VERSION, '2.3.0.0', '=>')) {
             $this->response->setOutput($this->getView()->render('checkout/collector.tpl', $data));
         } else {
@@ -394,6 +399,10 @@ class ControllerCheckoutCollector extends Controller
      */
     public function success()
     {
+        $data['collector_token'] = $this->session->data['collector_token'];
+        $data['collector_frontend_api_url'] = $this->session->data['collector_frontend_api_url'];
+        $data['collector_locale'] = $this->session->data['collector_locale'];
+
         $this->_clearCart();
 
         unset($this->session->data['shipping_method']);
