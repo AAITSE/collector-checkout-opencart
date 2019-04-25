@@ -154,7 +154,7 @@ $(document).on( 'change', '#input-payment-country', function(e) {
 });
 
 // Shipping select
-$(document).on( 'click change', '#collector-shipping [name="shipping_method"]', function(e) {
+$(document).on( 'click', '#collector-shipping [name="shipping_method"]', function(e) {
     var el = $(e.currentTarget);
     var method_code = $('#collector-shipping [name="shipping_method"]:checked').val();
 
