@@ -303,7 +303,7 @@ class ControllerCheckoutCollector extends Controller
         $this->session->data['collector_frontend_api_url'] = $data['collector']['frontend_api_url'];
         $this->session->data['collector_locale'] = $data['locale'];
 
-        if (version_compare(VERSION, '2.3.0.0', '=>')) {
+        if (version_compare(VERSION, '2.3.0.0', '>=')) {
             $this->response->setOutput($this->getView()->render('checkout/collector.tpl', $data));
         } else {
             $this->response->setOutput($this->getView()->render('default/template/checkout/collector.tpl', $data));
@@ -468,7 +468,7 @@ class ControllerCheckoutCollector extends Controller
         $data['footer'] = $this->load->controller('common/footer');
         $data['header'] = $this->load->controller('common/header');
 
-        if (version_compare(VERSION, '2.3.0.0', '=>')) {
+        if (version_compare(VERSION, '2.3.0.0', '>=')) {
             $this->response->setOutput($this->getView()->render('checkout/collector/success.tpl', $data));
         } else {
             $this->response->setOutput($this->getView()->render('default/template/checkout/collector/success.tpl', $data));
@@ -846,7 +846,7 @@ class ControllerCheckoutCollector extends Controller
             'products' => $products
         ];
 
-        if (version_compare(VERSION, '2.3.0.0', '=>')) {
+        if (version_compare(VERSION, '2.3.0.0', '>=')) {
             $this->response->setOutput($this->getView()->render('checkout/collector/cart.tpl', $data));
         } else {
             $this->response->setOutput($this->getView()->render('default/template/checkout/collector/cart.tpl', $data));
@@ -872,7 +872,7 @@ class ControllerCheckoutCollector extends Controller
             ])
         ];
 
-        if (version_compare(VERSION, '2.3.0.0', '=>')) {
+        if (version_compare(VERSION, '2.3.0.0', '>=')) {
             $this->response->setOutput($this->getView()->render('checkout/collector/totals.tpl', $data));
         } else {
             $this->response->setOutput($this->getView()->render('default/template/checkout/collector/totals.tpl', $data));
@@ -972,7 +972,7 @@ class ControllerCheckoutCollector extends Controller
             'code' => $shipping_method_code
         ];
 
-        if (version_compare(VERSION, '2.3.0.0', '=>')) {
+        if (version_compare(VERSION, '2.3.0.0', '>=')) {
             $this->response->setOutput($this->getView()->render('checkout/collector/shipping_methods.tpl', $data));
         } else {
             $this->response->setOutput($this->getView()->render('default/template/checkout/collector/shipping_methods.tpl', $data));

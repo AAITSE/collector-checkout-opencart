@@ -177,7 +177,7 @@ class ModelCollectorHelper extends Model {
 
         $this->load->model('extension/extension');
 
-        if (version_compare(VERSION, '2.3.0.0', '=>')) {
+        if (version_compare(VERSION, '2.3.0.0', '>=')) {
             $totals = array();
             $taxes = $this->cart->getTaxes();
             $total = 0;
@@ -265,7 +265,7 @@ class ModelCollectorHelper extends Model {
 
         foreach ($results as $result) {
             if ($this->config->get($result['code'] . '_status')) {
-                if (version_compare(VERSION, '2.3.0.0', '=>')) {
+                if (version_compare(VERSION, '2.3.0.0', '>=')) {
                     $this->load->model('extension/shipping/' . $result['code']);
                     $quote = $this->{'model_extension_shipping_' . $result['code']}->getQuote($address);
                 } else {

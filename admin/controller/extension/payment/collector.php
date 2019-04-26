@@ -30,7 +30,7 @@ class ControllerExtensionPaymentCollector extends Controller
             $this->model_setting_setting->editSetting('collector', $this->request->post);
             $this->session->data['success'] = $this->language->get('text_success');
 
-            if (version_compare(VERSION, '2.3.0.0', '=>')) {
+            if (version_compare(VERSION, '2.3.0.0', '>=')) {
                 $this->response->redirect(
                     $this->url->link('extension/extension', 'token=' . $this->session->data['token'] . '&type=payment', true)
                 );
@@ -77,7 +77,7 @@ class ControllerExtensionPaymentCollector extends Controller
 
         $data['action'] = $this->url->link('extension/payment/collector', 'token=' . $this->session->data['token'], true);
 
-        if (version_compare(VERSION, '2.3.0.0', '=>')) {
+        if (version_compare(VERSION, '2.3.0.0', '>=')) {
             $data['cancel'] = $this->url->link('extension/extension', 'token=' . $this->session->data['token'] . '&type=payment', true);
         } else {
             $data['cancel'] = $this->url->link('extension/payment', 'token=' . $this->session->data['token']);
@@ -87,6 +87,7 @@ class ControllerExtensionPaymentCollector extends Controller
         $settings = [
             'collector_status',
 	        'collector_store_mode',
+            'collector_country',
             'collector_store_id_b2c_se',
             'collector_store_id_b2b_se',
             'collector_store_id_b2c_no',
