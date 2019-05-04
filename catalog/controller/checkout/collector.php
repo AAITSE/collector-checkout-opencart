@@ -190,6 +190,30 @@ class ControllerCheckoutCollector extends Controller
             }
         }
 
+        // Apply first shipping method
+        if ($this->cart->hasShipping() && !isset($this->session->data['shipping_method'])) {
+            // Fetch shipping methods
+            $address = [
+                'country_id' => $data['country_id'],
+                'zone_id' => 0
+            ];
+
+            $methods = $this->getHelper()->getShippingMethods($address);
+            foreach ($methods as $shipping_method) {
+                if ($shipping_method['error']) {
+                    continue;
+                }
+
+                foreach ($shipping_method['quote'] as $quote) {
+                    $shipping = explode('.', $quote['code']);
+                    $this->session->data['shipping_method'] = $this->session->data['shipping_methods'][$shipping[0]]['quote'][$shipping[1]];
+                    break;
+                }
+
+                break;
+            }
+        }
+
         $data['store_mode'] = $settings['collector_store_mode'];
         $data['customer_type'] = $this->getCustomerType();
         $data['store_id'] = $this->getMerchantStoreId($data['customer_type'], $country['iso_code_2']);
@@ -271,7 +295,7 @@ class ControllerCheckoutCollector extends Controller
             $params = $collector_items['fees'];
             if ($this->cart->hasShipping()) {
                 $shipping = $this->getHelper()->getCartShipping();
-                if ($shipping['unit_price'] < 0.1) {
+                if (!$shipping || $shipping['unit_price'] < 0.1) {
                     $params['shipping'] = null;
                 }
             } else {
@@ -1160,7 +1184,7 @@ class ControllerCheckoutCollector extends Controller
             //$result = $this->getApi()->request('PUT', sprintf('/merchants/%s/checkouts/%s/fees', $store_id, $private_id), $params);
             if ($this->cart->hasShipping()) {
                 $shipping = $this->getHelper()->getCartShipping();
-                if ($shipping['unit_price'] < 0.1) {
+                if (!$shipping || $shipping['unit_price'] < 0.1) {
                     $params['shipping'] = null;
                 }
             } else {
