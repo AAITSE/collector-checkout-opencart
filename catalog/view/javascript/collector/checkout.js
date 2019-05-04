@@ -62,6 +62,8 @@ $(document).on( 'change', '.collector-cart .qty', function(e) {
             $('#cart-total').text(response.total);
         }
 
+        $('#cart > ul').load('index.php?route=common/cart/info ul li');
+
         update_checkout(function (err) {
             if (err) {
                 alert(err);
@@ -111,6 +113,8 @@ $(document).on('click', '.collector-cart .remove', function(e) {
         } else if (response.action === 'remove') {
             row_el.remove();
         }
+
+        $('#cart > ul').load('index.php?route=common/cart/info ul li');
 
         update_checkout(function (err) {
             if (err) {
