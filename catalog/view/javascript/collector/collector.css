@@ -1,0 +1,6 @@
+@media (max-width: 414px) {
+    body.checkout-collector .collector-checkout {
+        width: 90%;
+        margin: 0 auto;
+    }
+}

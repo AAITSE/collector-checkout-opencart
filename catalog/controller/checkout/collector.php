@@ -128,6 +128,7 @@ class ControllerCheckoutCollector extends Controller
         $this->document->setTitle($this->getView()->__('Collector Checkout'));
         $this->document->addScript('catalog/view/javascript/collector/async/async.min.js');
         $this->document->addScript('catalog/view/javascript/collector/checkout.js');
+        $this->document->addStyle('catalog/view/javascript/collector/collector.css');
 
         $data = [
             'view' => $this->getView()
