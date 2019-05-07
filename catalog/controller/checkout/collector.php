@@ -539,161 +539,171 @@ class ControllerCheckoutCollector extends Controller
             $log->write(sprintf('Checkout Info: %s', var_export($info, true)));
 
             // Check Order ID
-            if (isset($info['data']['reference'])) {
-                $order_id = $info['data']['reference'];
-                throw new Exception('This order already assigned to order_id: ' . $order_id);
-            }
+            if (!isset($info['data']['reference'])) {
+                // Create Order
+                // Check status
+                if (!in_array($info['data']['status'], ['PurchaseCompleted'])) {
+                    throw new Exception('Purchase not Completed: ' . $info['data']['status']);
+                }
 
-            // Check status
-            if (!in_array($info['data']['status'], ['PurchaseCompleted'])) {
-                throw new Exception('Purchase not Completed: ' . $info['data']['status']);
-            }
-
-            $quote_data['payment_method'] = [
-                'title' => 'Collector Checkout',
-                'code' => 'collector'
-            ];
-
-            // Get Country Info
-            $country_code = $info['data']['countryCode'];
-            $country_info = $this->getHelper()->getCountryByCode($country_code);
-
-            // Fill customer data
-            if ($info['data']['customerType'] === 'PrivateCustomer') {
-                // Personal Customer
-                $billing_address = !empty($info['data']['customer']['billingAddress'])
-                    ? $info['data']['customer']['billingAddress'] : $info['data']['customer']['deliveryAddress'];
-                $shipping_address = $info['data']['customer']['deliveryAddress'];
-
-                // Customer
-                $quote_data['customer'] = [
-                    //'customer_id' => 0,
-                    //'customer_group_id' => 0,
-                    'firstname' => $billing_address['firstName'],
-                    'lastname' => $billing_address['lastName'],
-                    'email' => $info['data']['customer']['email'],
-                    'telephone' => $info['data']['customer']['mobilePhoneNumber'],
-                    'fax' => '',
-                    'custom_field' => '',
+                $quote_data['payment_method'] = [
+                    'title' => 'Collector Checkout',
+                    'code' => 'collector'
                 ];
 
-                // Payment Details
-                $quote_data['payment_address'] = [
-                    'firstname' => $billing_address['firstName'],
-                    'lastname' => $billing_address['lastName'],
-                    'company' => '',
-                    'address_1' => $billing_address['address'],
-                    'address_2' => $billing_address['address2'],
-                    'city' => $billing_address['city'],
-                    'postcode' => $billing_address['postalCode'],
-                    'zone' => '',
-                    'zone_id' => 0,
-                    'country' => $billing_address['country'],
-                    'country_id' => $country_info['country_id'],
-                    'address_format' => $country_info['address_format'],
-                    'custom_field' => []
-                ];
+                // Get Country Info
+                $country_code = $info['data']['countryCode'];
+                $country_info = $this->getHelper()->getCountryByCode($country_code);
 
-                // Shipping Details
-                $quote_data['shipping_address'] = [
-                    'firstname' => $shipping_address['firstName'],
-                    'lastname' => $shipping_address['lastName'],
-                    'company' => '',
-                    'address_1' => $shipping_address['address'],
-                    'address_2' => $shipping_address['address2'],
-                    'city' => $shipping_address['city'],
-                    'postcode' => $shipping_address['postalCode'],
-                    'zone' => '',
-                    'zone_id' => 0,
-                    'country' => $shipping_address['country'],
-                    'country_id' => $country_info['country_id'],
-                    'address_format' => $country_info['address_format'],
-                    'custom_field' => []
+                // Fill customer data
+                if ($info['data']['customerType'] === 'PrivateCustomer') {
+                    // Personal Customer
+                    $billing_address = !empty($info['data']['customer']['billingAddress'])
+                        ? $info['data']['customer']['billingAddress'] : $info['data']['customer']['deliveryAddress'];
+                    $shipping_address = $info['data']['customer']['deliveryAddress'];
+
+                    // Customer
+                    $quote_data['customer'] = [
+                        //'customer_id' => 0,
+                        //'customer_group_id' => 0,
+                        'firstname' => $billing_address['firstName'],
+                        'lastname' => $billing_address['lastName'],
+                        'email' => $info['data']['customer']['email'],
+                        'telephone' => $info['data']['customer']['mobilePhoneNumber'],
+                        'fax' => '',
+                        'custom_field' => '',
+                    ];
+
+                    // Payment Details
+                    $quote_data['payment_address'] = [
+                        'firstname' => $billing_address['firstName'],
+                        'lastname' => $billing_address['lastName'],
+                        'company' => '',
+                        'address_1' => $billing_address['address'],
+                        'address_2' => $billing_address['address2'],
+                        'city' => $billing_address['city'],
+                        'postcode' => $billing_address['postalCode'],
+                        'zone' => '',
+                        'zone_id' => 0,
+                        'country' => $billing_address['country'],
+                        'country_id' => $country_info['country_id'],
+                        'address_format' => $country_info['address_format'],
+                        'custom_field' => []
+                    ];
+
+                    // Shipping Details
+                    $quote_data['shipping_address'] = [
+                        'firstname' => $shipping_address['firstName'],
+                        'lastname' => $shipping_address['lastName'],
+                        'company' => '',
+                        'address_1' => $shipping_address['address'],
+                        'address_2' => $shipping_address['address2'],
+                        'city' => $shipping_address['city'],
+                        'postcode' => $shipping_address['postalCode'],
+                        'zone' => '',
+                        'zone_id' => 0,
+                        'country' => $shipping_address['country'],
+                        'country_id' => $country_info['country_id'],
+                        'address_format' => $country_info['address_format'],
+                        'custom_field' => []
+                    ];
+                } else {
+                    // Corporate Customer
+                    $billing_address = !empty($info['data']['businessCustomer']['invoiceAddress'])
+                        ? $info['data']['businessCustomer']['invoiceAddress'] : $info['data']['businessCustomer']['deliveryAddress'];
+                    $shipping_address = $info['data']['businessCustomer']['deliveryAddress'];
+
+                    // Customer
+                    $quote_data['customer'] = [
+                        //'customer_id' => 0,
+                        //'customer_group_id' => 0,
+                        'firstname' => $info['data']['businessCustomer']['firstName'],
+                        'lastname' => $info['data']['businessCustomer']['lastName'],
+                        'email' => $info['data']['businessCustomer']['email'],
+                        'telephone' => $info['data']['businessCustomer']['mobilePhoneNumber'],
+                        'fax' => '',
+                        'custom_field' => '',
+                    ];
+
+                    // Payment Details
+                    $quote_data['payment_address'] = [
+                        'firstname' => $info['data']['businessCustomer']['firstName'],
+                        'lastname' => $info['data']['businessCustomer']['lastName'],
+                        'company' => $billing_address['companyName'],
+                        'address_1' => $billing_address['address'],
+                        'address_2' => $billing_address['address2'],
+                        'city' => $billing_address['city'],
+                        'postcode' => $billing_address['postalCode'],
+                        'zone' => '',
+                        'zone_id' => 0,
+                        'country' => $billing_address['country'],
+                        'country_id' => $country_info['country_id'],
+                        'address_format' => $country_info['address_format'],
+                        'custom_field' => []
+                    ];
+
+                    // Shipping Details
+                    $quote_data['shipping_address'] = [
+                        'firstname' => $info['data']['businessCustomer']['firstName'],
+                        'lastname' => $info['data']['businessCustomer']['lastName'],
+                        'company' => $shipping_address['companyName'],
+                        'address_1' => $shipping_address['address'],
+                        'address_2' => $shipping_address['address2'],
+                        'city' => $shipping_address['city'],
+                        'postcode' => $shipping_address['postalCode'],
+                        'zone' => '',
+                        'zone_id' => 0,
+                        'country' => $shipping_address['country'],
+                        'country_id' => $country_info['country_id'],
+                        'address_format' => $country_info['address_format'],
+                        'custom_field' => []
+                    ];
+                }
+
+                // Email Required for addOrderHistory()
+                if (empty($quote_data['customer']['email'])) {
+                    $quote_data['customer']['email'] = token(10) . '@noemail.fake';
+                }
+
+                // Get order total
+                $value = $this->currency->getValue($quote_data['currency_code']);
+                if (!$value) {
+                    $value = 1;
+                }
+                $quote_data['total'] = $info['data']['order']['totalAmount'] / $value;
+
+                // Create Order
+                unset($quote_data['products']);
+                $order_id = $this->getHelper()->addOrder($quote_data);
+                if (!$order_id) {
+                    $log->write('Failed to place order');
+                }
+
+                $log->write(sprintf('Placed Order: %s', $order_id));
+
+                // @todo Add items in order_product table
+                // @todo Add fees/shipping in order_total table
+                // @todo Add vouchers in order_voucher
+
+                // Assign Order Reference
+                $params = [
+                    'Reference' => $order_id
                 ];
+                $this->getApi()->request('PUT', sprintf('/merchants/%s/checkouts/%s/reference', $store_id, $private_id), $params);
+
+                // B2B: Add delivery Contact Information
+                if (isset($info['data']['businessCustomer']) && isset($info['data']['businessCustomer']['deliveryContactInformation'])) {
+                    $order_status_id = $this->config->get('config_order_status_id');
+                    $email = $info['data']['businessCustomer']['deliveryContactInformation']['email'];
+                    $phone = $info['data']['businessCustomer']['deliveryContactInformation']['mobilePhoneNumber'];
+                    $message = sprintf('Delivery Contact Information. Email: %s Phone: %s', $email, $phone);
+                    $this->model_checkout_order->addOrderHistory($order_id, $order_status_id, $message, false);
+                }
             } else {
-                // Corporate Customer
-                $billing_address = !empty($info['data']['businessCustomer']['invoiceAddress'])
-                    ? $info['data']['businessCustomer']['invoiceAddress'] : $info['data']['businessCustomer']['deliveryAddress'];
-                $shipping_address = $info['data']['businessCustomer']['deliveryAddress'];
-
-                // Customer
-                $quote_data['customer'] = [
-                    //'customer_id' => 0,
-                    //'customer_group_id' => 0,
-                    'firstname' => $info['data']['businessCustomer']['firstName'],
-                    'lastname' => $info['data']['businessCustomer']['lastName'],
-                    'email' => $info['data']['businessCustomer']['email'],
-                    'telephone' => $info['data']['businessCustomer']['mobilePhoneNumber'],
-                    'fax' => '',
-                    'custom_field' => '',
-                ];
-
-                // Payment Details
-                $quote_data['payment_address'] = [
-                    'firstname' => $info['data']['businessCustomer']['firstName'],
-                    'lastname' => $info['data']['businessCustomer']['lastName'],
-                    'company' => $billing_address['companyName'],
-                    'address_1' => $billing_address['address'],
-                    'address_2' => $billing_address['address2'],
-                    'city' => $billing_address['city'],
-                    'postcode' => $billing_address['postalCode'],
-                    'zone' => '',
-                    'zone_id' => 0,
-                    'country' => $billing_address['country'],
-                    'country_id' => $country_info['country_id'],
-                    'address_format' => $country_info['address_format'],
-                    'custom_field' => []
-                ];
-
-                // Shipping Details
-                $quote_data['shipping_address'] = [
-                    'firstname' => $info['data']['businessCustomer']['firstName'],
-                    'lastname' => $info['data']['businessCustomer']['lastName'],
-                    'company' => $shipping_address['companyName'],
-                    'address_1' => $shipping_address['address'],
-                    'address_2' => $shipping_address['address2'],
-                    'city' => $shipping_address['city'],
-                    'postcode' => $shipping_address['postalCode'],
-                    'zone' => '',
-                    'zone_id' => 0,
-                    'country' => $shipping_address['country'],
-                    'country_id' => $country_info['country_id'],
-                    'address_format' => $country_info['address_format'],
-                    'custom_field' => []
-                ];
+                $order_id = $info['data']['reference'];
             }
 
-            // Email Required for addOrderHistory()
-            if (empty($quote_data['customer']['email'])) {
-                $quote_data['customer']['email'] = token(10) . '@noemail.fake';
-            }
-
-            // Get order total
-            $value = $this->currency->getValue($quote_data['currency_code']);
-            if (!$value) {
-                $value = 1;
-            }
-            $quote_data['total'] = $info['data']['order']['totalAmount'] / $value;
-
-            // Create Order
-            unset($quote_data['products']);
-            $order_id = $this->getHelper()->addOrder($quote_data);
-            if (!$order_id) {
-                $log->write('Failed to place order');
-            }
-
-            $log->write(sprintf('Placed Order: %s', $order_id));
-
-            // @todo Add items in order_product table
-            // @todo Add fees/shipping in order_total table
-            // @todo Add vouchers in order_voucher
-
-            // Assign Order Reference
-            $params = [
-                'Reference' => $order_id
-            ];
-            $this->getApi()->request('PUT', sprintf('/merchants/%s/checkouts/%s/reference', $store_id, $private_id), $params);
-
+            // Update Order Status
             $settings = $this->getSettings();
             $purchaseStatus = isset($info['data']['purchase']) ? $info['data']['purchase']['result'] : null;
 
@@ -706,15 +716,6 @@ class ControllerCheckoutCollector extends Controller
                 'purchaseIdentifier' => isset($info['data']['purchase']) ? $info['data']['purchase']['purchaseIdentifier'] : null,
                 'purchaseStatus' => $purchaseStatus
             ]);
-
-            // B2B: Add delivery Contact Information
-            if (isset($info['data']['businessCustomer']) && isset($info['data']['businessCustomer']['deliveryContactInformation'])) {
-                $order_status_id = $this->config->get('config_order_status_id');
-                $email = $info['data']['businessCustomer']['deliveryContactInformation']['email'];
-                $phone = $info['data']['businessCustomer']['deliveryContactInformation']['mobilePhoneNumber'];
-                $message = sprintf('Delivery Contact Information. Email: %s Phone: %s', $email, $phone);
-                $this->model_checkout_order->addOrderHistory($order_id, $order_status_id, $message, false);
-            }
 
             switch ($purchaseStatus) {
                 case 'Preliminary':
@@ -754,91 +755,8 @@ class ControllerCheckoutCollector extends Controller
                     $this->model_checkout_order->addOrderHistory($order_id, $order_status_id, 'Purchase status: ' . $purchaseStatus, true);
                     break;
             }
-        } catch (Exception $e) {
-            $log->write(sprintf('Error: %s', $e->getMessage()));
 
-            http_response_code(500);
-            $this->response->setOutput('FAILURE');
-            return;
-        }
-
-        http_response_code(200);
-        $this->response->setOutput('OK');
-    }
-
-    /**
-     * Invoice Status Action.
-     */
-    public function invoicestatus()
-    {
-        $settings = $this->getSettings();
-        $log = new Log('collector_invoice_status.log');
-        $token = isset($this->request->get['token']) ? $this->request->get['token'] : null;
-        $InvoiceNo = isset($this->request->get['InvoiceNo']) ? $this->request->get['InvoiceNo'] : null;
-        $OrderNo = isset($this->request->get['OrderNo']) ? $this->request->get['OrderNo'] : null;
-        $InvoiceStatus = isset($this->request->get['InvoiceNo']) ? (int)$this->request->get['InvoiceStatus'] : null;
-
-        try {
-            if ($token !== $settings['collector_url_token']) {
-                throw new Exception('Token verification failed');
-            }
-
-            if (empty($InvoiceNo) || empty($OrderNo) || empty($InvoiceStatus)) {
-                throw new Exception('Request failed');
-            }
-
-            // Wait for order place
-            $time = 0;
-            do {
-                $payment = $this->getPayments()->getByOrderId($OrderNo);
-                $time++;
-                sleep(1);
-                if ($time > 30) {
-                    break;
-                }
-            } while (!$payment || empty($payment['order_id']));
-
-            if (!$payment) {
-                throw new Exception('Failed to get payment data');
-            }
-
-            if (!in_array($InvoiceStatus, [0, 1, 5])) {
-                throw new Exception('Invalid invoice status: ' . $InvoiceStatus);
-            }
-
-
-            $order_id = $payment['order_id'];
-            $new_status_str = '';
-            if ($InvoiceStatus == 1) {
-                $order_status_id = $settings['collector_order_status_preliminary_id'];
-                $new_status_str = 'Preliminary';
-
-                $this->getPayments()->update($payment['id'], [
-                    'purchaseStatus' => 'Preliminary'
-                ]);
-            } elseif ($InvoiceStatus == 0) {
-                $order_status_id = $settings['collector_order_status_pending_id'];
-                $new_status_str = 'OnHold';
-
-                $this->getPayments()->update($payment['id'], [
-                    'purchaseStatus' => 'OnHold'
-                ]);
-            } elseif ($InvoiceStatus == 5) {
-                $order_status_id = $settings['collector_order_status_rejected_id'];
-                $new_status_str = 'Rejected';
-
-                $this->getPayments()->update($payment['id'], [
-                    'purchaseStatus' => 'Rejected'
-                ]);
-            }
-
-            if (empty($order_status_id)) {
-                $order_status_id = $this->config->get('config_order_status_id');
-            }
-
-            $this->load->model('checkout/order');
-            $this->model_checkout_order->addOrderHistory($order_id, $order_status_id, sprintf('Order is now %s', $new_status_str), true);
-            $log->write('Anti Fraud callback by Collector: Internal (' . $InvoiceNo . ') Status changed to ID: ' . $new_status_str);
+            $log->write(sprintf('Updated Order: %s. Status: %s', $order_id, $purchaseStatus));
         } catch (Exception $e) {
             $log->write(sprintf('Error: %s', $e->getMessage()));
 

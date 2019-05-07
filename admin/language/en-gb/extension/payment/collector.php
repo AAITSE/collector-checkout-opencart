@@ -25,8 +25,6 @@ $_['entry_order_status_rejected']	= 'Order Status for rejected payments';
 $_['entry_order_status_credited']	= 'Order Status for credited payments';
 
 $_['entry_merchant_terms_url'] = 'Merchant Terms Url';
-$_['entry_url_token'] = 'Token for Invoice Status URL';
-$_['entry_invoice_status_url'] = 'Invoice Status URL';
 
 $_['entry_invoice_fee_b2c']     = 'Invoice fee (incl. tax) B2C';
 $_['entry_invoice_fee_vat_b2c'] = 'Invoice VAT rate B2C';

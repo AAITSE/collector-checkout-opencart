@@ -252,25 +252,6 @@
                             </div>
                         </div>
 
-                        <div class="form-group required">
-                            <label class="col-sm-2 control-label" for="collector_url_token">
-                                <?php echo $entry_url_token; ?>
-                            </label>
-                            <div class="col-sm-10">
-                                <input type="text" name="collector_url_token" value="<?php echo $collector_url_token; ?>"
-                                       placeholder="<?php echo $entry_url_token; ?>" id="collector_url_token" class="form-control" />
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="collector_invoice_status_url">
-                                <?php echo $entry_invoice_status_url; ?>
-                            </label>
-                            <div class="col-sm-10">
-                                <input type="text" name="collector_invoice_status_url" value="<?php echo $collector_invoice_status_url; ?>" id="collector_invoice_status_url" class="form-control" readonly />
-                            </div>
-                        </div>
-
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="collector_invoice_fee_b2c">
                                 <?php echo $entry_invoice_fee_b2c; ?>
