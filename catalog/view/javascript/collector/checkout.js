@@ -37,6 +37,8 @@ $(document).on( 'change', '.collector-cart .qty', function(e) {
     el.prop('disabled', true);
     el.addClass('disabled');
 
+    window.collector.checkout.api.suspend();
+
     $.ajax({
         url: 'index.php?route=checkout/collector/cart_update',
         method: 'post',
@@ -46,7 +48,7 @@ $(document).on( 'change', '.collector-cart .qty', function(e) {
             qty: el.val()
         }
     }).always(function () {
-        //
+        //window.collector.checkout.api.resume();
     }).done(function (response) {
         var row_el = $('.collector-cart #cart_' + response.cart_id);
         if (response.action === 'update') {
