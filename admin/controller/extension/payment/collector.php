@@ -15,7 +15,6 @@ class ControllerExtensionPaymentCollector extends Controller
             'entry_username', 'entry_sharedkey', 'entry_mode', 'entry_order_status_preliminary',
             'entry_order_status_accepted', 'entry_order_status_pending', 'entry_order_status_rejected',
 	        'entry_order_status_credited', 'entry_merchant_terms_url',
-            'entry_invoice_fee_b2c', 'entry_invoice_fee_vat_b2c', 'entry_invoice_fee_b2b', 'entry_invoice_fee_vat_b2b'
         ];
         foreach ($languages as $language) {
             $data[$language] = $this->language->get($language);

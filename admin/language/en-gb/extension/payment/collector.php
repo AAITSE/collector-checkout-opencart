@@ -26,11 +26,6 @@ $_['entry_order_status_credited']	= 'Order Status for credited payments';
 
 $_['entry_merchant_terms_url'] = 'Merchant Terms Url';
 
-$_['entry_invoice_fee_b2c']     = 'Invoice fee (incl. tax) B2C';
-$_['entry_invoice_fee_vat_b2c'] = 'Invoice VAT rate B2C';
-$_['entry_invoice_fee_b2b']     = 'Invoice fee (incl. tax) B2B';
-$_['entry_invoice_fee_vat_b2b'] = 'Invoice VAT rate B2B';
-
 $_['text_success_action']	= 'Success';
 $_['text_error_generic']	= 'Error: There was an error with your request. Please check the logs.';
 

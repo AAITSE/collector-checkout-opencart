@@ -251,46 +251,6 @@
                                        placeholder="<?php echo $entry_merchant_terms_url; ?>" id="collector_merchant_terms_url" class="form-control" />
                             </div>
                         </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="collector_invoice_fee_b2c">
-                                <?php echo $entry_invoice_fee_b2c; ?>
-                            </label>
-                            <div class="col-sm-10">
-                                <input type="number" min="0" name="collector_invoice_fee_b2c" value="<?php echo $collector_invoice_fee_b2c; ?>"
-                                       placeholder="<?php echo $entry_invoice_fee_b2c; ?>" id="collector_invoice_fee_b2c" class="form-control" />
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="collector_invoice_fee_vat_b2c">
-                                <?php echo $entry_invoice_fee_vat_b2c; ?>
-                            </label>
-                            <div class="col-sm-10">
-                                <input type="number" min="0" name="collector_invoice_fee_vat_b2c" value="<?php echo $collector_invoice_fee_vat_b2c; ?>"
-                                       placeholder="<?php echo $entry_invoice_fee_vat_b2c; ?>" id="collector_invoice_fee_vat_b2c" class="form-control" />
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="collector_invoice_fee_b2b">
-                                <?php echo $entry_invoice_fee_b2b; ?>
-                            </label>
-                            <div class="col-sm-10">
-                                <input type="number" min="0" name="collector_invoice_fee_b2b" value="<?php echo $collector_invoice_fee_b2c; ?>"
-                                       placeholder="<?php echo $entry_invoice_fee_b2b; ?>" id="collector_invoice_fee_b2b" class="form-control" />
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="collector_invoice_fee_vat_b2b">
-                                <?php echo $entry_invoice_fee_vat_b2b; ?>
-                            </label>
-                            <div class="col-sm-10">
-                                <input type="number" min="0" name="collector_invoice_fee_vat_b2b" value="<?php echo $collector_invoice_fee_vat_b2b; ?>"
-                                       placeholder="<?php echo $entry_invoice_fee_vat_b2b; ?>" id="collector_invoice_fee_vat_b2b" class="form-control" />
-                            </div>
-                        </div>
                     </form>
                 </div>
             </div>
