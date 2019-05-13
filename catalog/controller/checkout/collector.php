@@ -807,11 +807,25 @@ class ControllerCheckoutCollector extends Controller
             $country_id = $this->config->get('config_country_id');
         }
 
+        if (isset($this->session->data['payment_address']['zone_id'])) {
+            $zone_id = $this->session->data['payment_address']['zone_id'];
+        } else {
+            $zone_id = 0;
+        }
+
+        if (isset($this->session->data['shipping_address']['country_id'])) {
+            $country_id = $this->session->data['shipping_address']['country_id'];
+        }
+
+        if (isset($this->session->data['shipping_address']['zone_id'])) {
+            $zone_id = $this->session->data['shipping_address']['zone_id'];
+        }
+
         $data = [
             'view' => $this->getView(),
             'totals' => $this->getHelper()->getCartTotals([
                 'country_id' => $country_id,
-                'zone_id' => 0
+                'zone_id' => $zone_id
             ])
         ];
 

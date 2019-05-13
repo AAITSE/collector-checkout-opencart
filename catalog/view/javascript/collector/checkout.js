@@ -165,14 +165,7 @@ $(document).on( 'click', '#collector-shipping [name="shipping_method"]', functio
     var method_code = $('#collector-shipping [name="shipping_method"]:checked').val();
 
     el.prop('disabled', true);
-    $.ajax({
-        url: 'index.php?route=checkout/collector/set_shipping_method',
-        method: 'post',
-        dataType: 'json',
-        data: {
-            shipping_method: method_code
-        }
-    }).done(function (response) {
+    set_shipping_method(method_code, function (response) {
         el.prop('disabled', false);
 
         get_totals(function (err) {
@@ -205,10 +198,13 @@ $(document).on( 'click', '#change-customer', function(e) {
     });
 });
 
-//
-
+/**
+ * Get Cart
+ * @param callback
+ * @returns {*}
+ */
 function get_cart(callback) {
-    $.ajax({
+    return $.ajax({
         url: 'index.php?route=checkout/collector/cart',
         dataType: 'html',
         success: function (html) {
@@ -221,6 +217,11 @@ function get_cart(callback) {
     });
 }
 
+/**
+ * Get Totals
+ * @param callback
+ * @returns {*}
+ */
 function get_totals(callback) {
     if (typeof callback === 'undefined') {
         callback = function(){};
@@ -239,6 +240,12 @@ function get_totals(callback) {
     });
 }
 
+/**
+ * Get Shipping Methods
+ * @param country_id
+ * @param callback
+ * @returns {*}
+ */
 function get_shipping_methods(country_id, callback) {
     if (typeof callback === 'undefined') {
         callback = function(){};
@@ -258,6 +265,11 @@ function get_shipping_methods(country_id, callback) {
     });
 }
 
+/**
+ * Update Collector Checkout
+ * @param callback
+ * @return {*}
+ */
 function update_collector_checkout(callback) {
     if (typeof callback === 'undefined') {
         callback = function(){};
@@ -265,7 +277,7 @@ function update_collector_checkout(callback) {
 
     window.collector.checkout.api.suspend();
 
-    $.ajax({
+    return $.ajax({
         url: 'index.php?route=checkout/collector/collector_update',
         method: 'post',
         dataType: 'json'
@@ -285,34 +297,68 @@ function update_collector_checkout(callback) {
     });
 }
 
+/**
+ * Update Checkout
+ * @param callback
+ */
 function update_checkout(callback) {
     if (typeof callback === 'undefined') {
         callback = function(){};
     }
 
-    async.parallel({
-        cart: function(callback1) {
-            get_cart(function (err, data) {
-                callback1(err, data)
-            });
-        },
-        totals: function(callback1) {
-            get_totals(function (err, data) {
-                callback1(err, data);
-            });
-        },
-        shipping_methods: function (callback1) {
-            setTimeout(function () {
-                var country_id = $('#input-payment-country').val();
-                get_shipping_methods(country_id, function (err) {
-                    callback1(err);
+    var method_code = false;
+    if ($('#collector-shipping [name="shipping_method"]:checked').length > 0) {
+        method_code = $('#collector-shipping [name="shipping_method"]:checked').val();
+    }
+
+    set_shipping_method(method_code, function (response) {
+        async.parallel({
+            cart: function(callback1) {
+                get_cart(function (err, data) {
+                    callback1(err, data)
                 });
-            }, 1000);
-        }
-    }, function(err, results) {
-        // Parallel is done
-        callback(err, results);
+            },
+            totals: function(callback1) {
+                get_totals(function (err, data) {
+                    callback1(err, data);
+                });
+            },
+            shipping_methods: function (callback1) {
+                setTimeout(function () {
+                    var country_id = $('#input-payment-country').val();
+                    get_shipping_methods(country_id, function (err) {
+                        callback1(err);
+                    });
+                }, 1000);
+            }
+        }, function(err, results) {
+            // Parallel is done
+            callback(err, results);
+        });
     });
 }
 
+/**
+ * Set shipping method
+ * @param method_code
+ * @param callback
+ * @returns {*}
+ */
+function set_shipping_method(method_code, callback) {
+    if (typeof method_code === 'undefined' || !method_code) {
+        return callback();
+    }
 
+    return $.ajax({
+        url: 'index.php?route=checkout/collector/set_shipping_method',
+        method: 'post',
+        dataType: 'json',
+        data: {
+            shipping_method: method_code
+        }
+    }).done(function (response) {
+        callback(response);
+    }).fail(function (jqXHR, textStatus, errorThrown) {
+        callback(errorThrown);
+    });
+}
