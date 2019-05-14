@@ -111,7 +111,7 @@
                           <?php endif; ?>
                           <?php if (in_array($collector['paymentName'], ['Invoice', 'DirectInvoice']) && !$collector['canceled'] && !$collector['credited']):?>
                             <?php if ($collector['activated']): ?>
-                                <button data-id="<?php echo $collector['id']; ?>" data-action="send" class="collector-action btn">Send Invoice</button>
+                                <button data-id="<?php echo $collector['id']; ?>" data-action="send" class="collector-action btn">Send Invoice again</button>
                             <?php endif; ?>
                             <?php if ($collector['activated'] && !$collector['extended']): ?>
                                 <button data-id="<?php echo $collector['id']; ?>" data-action="extend" class="collector-action btn">Extend Due Date</button>
