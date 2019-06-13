@@ -2,6 +2,8 @@
 
 This is the official Collector Checkout Extension for OpenCart, allowing you to accept payments via Collector Banks payment method Collector Checkout. A contract with Collector Bank is required to use this payment solution. This Extension is commisioned by Collector Bank AB and maintained by Aight Konsult. Support questions is preferably directed to info@aait.se 
 
+This module supports OpenCart from version 2.1 up to version 2.3
+
 ## Installation
 
 ### Extension Installer
